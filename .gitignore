@@ -1,0 +1,83 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# TypeScript
+*.tsbuildinfo
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+coverage/
+*.log
+
+# Frontend (React, Vite, etc.)
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Prisma/Database
+prisma/dev.db
+prisma/dev.db-journal
+*.sqlite
+*.sqlite3
+
+# Misc
+*.local
+*.cache
+.cache/
+tmp/
+temp/
+*.pid
+
+# Test snapshots
+__snapshots__/
+*.snap
+
+# Storybook
+storybook-static/
+
+# Svelte/SvelteKit
+.svelte-kit/
+
+# Mac System Files
+.AppleDouble
+.LSOverride
+
+# Windows System Files
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# Linux System Files
+*~
+
+# Logs
+logs/
+*.log
+
+# Optional: Ignore generated files from your build tools or frameworks
+generated/
