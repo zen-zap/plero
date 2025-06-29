@@ -1,11 +1,13 @@
-import express, { Request, Response } from "express";
-import fs from "fs";
-import path from "path";
-import { ParsedQs } from "qs";
+import express, { Request, Response } from "express"; // import express and its types for HTTP request and response
+import fs from "fs"; // file system module to read/write files
+import path from "path"; // path module to handle file paths
+import { ParsedQs } from "qs"; // ParsedQs type for parsing query strings
 
-const router = express.Router();
-const ROOT = process.cwd();
+// ROUTER and ROOT
+const router = express.Router(); // new router instance for handling file-related routes
+const ROOT = process.cwd(); // get the current working directory, which is the root of our file system for this app
 
+// TYPE DEFINITIONS
 type FileNode = {
   name: string;
   type: "file";
@@ -19,8 +21,14 @@ type FolderNode = {
   children: TreeNode[];
 };
 
+// a type that can be either a FileNode or FolderNode
 type TreeNode = FileNode | FolderNode;
 
+/**
+ * Recursively gets the directory tree starting from the given directory.
+ * @param dir - The directory to start from.
+ * @returns An array of TreeNode representing the directory structure.
+ */
 function getTree(dir: string): TreeNode[] {
   return fs.readdirSync(dir).map((name: string): TreeNode => {
     const fullPath = path.join(dir, name);
@@ -31,18 +39,19 @@ function getTree(dir: string): TreeNode[] {
         type: "folder",
         path: path.relative(ROOT, fullPath),
         children: getTree(fullPath),
-      };
+      }; // returns a FolderNode
     } else {
       return {
         name,
         type: "file",
         path: path.relative(ROOT, fullPath),
-      };
+      }; // returns a FileNode
     }
   });
 }
 
 // List directory tree
+// the goal is not to list the files but display them in a tree structure with the CWD as the root
 router.get("/tree", (req: Request, res: Response) => {
   try {
     const tree = getTree(ROOT);
@@ -54,8 +63,10 @@ router.get("/tree", (req: Request, res: Response) => {
 });
 
 // Get file content
+// JSON body is not recommended for this route, so we use query parameters
+// Example: http://localhost:4000/api/files/content?path=src/routes/files.ts
 router.get("/content", (req: Request<{}, {}, {}, ParsedQs>, res: Response) => {
-  const relPath = req.query.path as string;
+  const relPath = req.query.path as string; // we read a query named path
   if (!relPath) {
     res.status(400).send("Missing path");
     return;
@@ -93,4 +104,6 @@ router.post("/save", (req: Request<{}, {}, { path: string; content: string }>, r
   }
 });
 
+// set up the default router of the file -- any other file that imports this file will have access to these routes
+// -- they can import them using any name they want
 export default router;

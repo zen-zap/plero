@@ -4,14 +4,18 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/index.ts",
+    "_comment_dev" : "Use 'npm run dev' to start the development server with nodemon and ts-node",
     "build": "tsc",
+    "_comment_build": "Use 'npm run build' to compile TypeScript files to JavaScript",
     "start": "node dist/index.js",
-    "prisma": "prisma"
+    "_comment_start": "Use 'npm run start' to run the compiled JavaScript files",
+    "prisma": "prisma",
+    "_comment_prisma": "Use 'npm run prisma' to run Prisma CLI commands"
   },
   "keywords": [],
-  "author": "",
+  "author": "zen-zap",
   "license": "ISC",
-  "description": "",
+  "description": "Backend for a code completion editor",
   "dependencies": {
     "@prisma/client": "^6.10.1",
     "cors": "^2.8.5",
