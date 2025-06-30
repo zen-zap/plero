@@ -1,19 +1,25 @@
+// in src/services/files.ts
+
 import fs from "fs";
 import path from "path";
 
-export const ROOT = process.cwd();
+//export const ROOT = process.cwd();
+
+const ROOT = process.env.TEST_ROOT
+  ? path.resolve(process.env.TEST_ROOT)
+  : process.cwd();
 
 export type FileNode = {
-    name: string; 
-    type: 'file';
-    path: string;
+    readonly name: string; 
+    readonly type: 'file';
+    readonly path: string;
 };
 
 export type FolderNode = {
-    name: string;
-    type: "folder";
-    path: string;
-    children: TreeNode[];
+    readonly name: string;
+    readonly type: "folder";
+    readonly path: string;
+    readonly children: TreeNode[];
 };
 
 export type TreeNode = FileNode | FolderNode;
@@ -24,7 +30,11 @@ export type TreeNode = FileNode | FolderNode;
  * @returns An array of TreeNode representing the directory structure.
  */
 export function getTree(dir: string = ROOT): TreeNode[] {
-    return fs.readdirSync(dir).map((name: string): TreeNode => {
+
+    const entries = fs.readdirSync(dir);
+    entries.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
+    return entries.map((name: string): TreeNode => {
         const fullPath = safeJoin(dir, name);
         const stat = fs.statSync(fullPath);
         if(stat.isDirectory()) {
@@ -116,14 +126,27 @@ export function delFolder(relPath: string): void {
 
 function safeJoin(root: string, relPath: string): string {
     const fullPath = path.resolve(root, relPath);
-    if (!fullPath.startsWith(root)) {
+    const rel = path.relative(root, fullPath);
+    if (rel.startsWith("..") || path.isAbsolute(rel)) {
         throw new Error("Invalid path");
     }
     return fullPath;
 }
 
-export function stat(relPath: string): fs.Stats {
-    return fs.statSync(path.join(ROOT, relPath));
+export function stat(relPath: string) {
+    const stats = fs.statSync(path.join(ROOT, relPath));
+    return {
+        size: stats.size,
+        mtime: stats.mtime,
+        ctime: stats.ctime,
+        atime: stats.atime,
+        isFile: stats.isFile(),           
+        isDirectory: stats.isDirectory(),
+        mode: stats.mode,
+        ino: stats.ino,
+        uid: stats.uid,
+        gid: stats.gid,
+    };
 }
 
 export function exists(relPath: string): boolean {
