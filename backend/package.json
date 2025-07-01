@@ -8,8 +8,9 @@
     "start": "node dist/index.js",
     "prisma": "prisma",
     "electron": "electron .",
-    "test": "electron-mocha --main dist/main.js dist/tests/ipc_tests/filesIpc.test.js",
-    "posttest": "node scripts/cleanup_test_artifacts.mjs"
+    "test": "electron-mocha --main dist/main.js dist/tests/**/*.test.js",
+    "posttest": "node scripts/cleanup_test_artifacts.mjs",
+    "test:commonroot":"node scripts/test_with_common_root.mjs"
   },
   "keywords": [],
   "author": "zen-zap",

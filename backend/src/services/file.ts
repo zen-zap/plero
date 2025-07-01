@@ -4,10 +4,14 @@ import fs from "fs";
 import path from "path";
 
 //export const ROOT = process.cwd();
+// Function to get current ROOT - checks TEST_ROOT dynamically
+function getRoot(): string {
+    return process.env.TEST_ROOT
+        ? path.resolve(process.env.TEST_ROOT)
+        : process.cwd();
+}
 
-const ROOT = process.env.TEST_ROOT
-  ? path.resolve(process.env.TEST_ROOT)
-  : process.cwd();
+const ROOT = getRoot();
 
 export type FileNode = {
     readonly name: string; 
@@ -151,4 +155,31 @@ export function stat(relPath: string) {
 
 export function exists(relPath: string): boolean {
     return fs.existsSync(path.join(ROOT, relPath));
+}
+
+/**
+ * Inserts the given content at the first occurrence of the cursor marker in the file.
+ * @param relPath Relative path to the file
+ * @param insertion String to insert
+ * @param marker Marker string where to insert (default: '[[CURSOR]]')
+ * @throws if file not found or marker not present
+ */
+export function insertAtCursor(
+  relPath: string,
+  insertion: string,
+  marker: string = '[[CURSOR]]'
+): void {
+  const filePath = safeJoin(ROOT, relPath);
+  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+    throw new Error("File not found");
+  }
+  let content = fs.readFileSync(filePath, "utf8");
+  const markerIdx = content.indexOf(marker);
+  if (markerIdx === -1) {
+    throw new Error(`Marker "${marker}" not found in file`);
+  }
+  // Insert insertion just before the marker
+  content =
+    content.slice(0, markerIdx) + insertion + content.slice(markerIdx);
+  fs.writeFileSync(filePath, content, "utf8");
 }

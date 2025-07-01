@@ -33,7 +33,7 @@ try {
       }
     }
   }
-  console.log("Cleanup done!");
+  console.log("Artifact Cleanup done!");
 } catch (err) {
   console.error("Cleanup encountered an error:", err);
   process.exit(1);
