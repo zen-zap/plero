@@ -1,0 +1,96 @@
+
+> plero-backend@1.0.0 test:ipc:ai
+> node scripts/test_ai.mjs
+
+Running tests matching pattern: ipc_tests/aiIpc.test.js
+Setting TEST_ROOT to: /tmp/plero_common_test_dfbf8951-dfa5-48c3-b257-1e5aa3d8b173
+
+> plero-backend@1.0.0 build
+> tsc
+
+
+
+Renderer Console [warning] : %cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
+[ai:complete] called with args: { prompt: 'console.log(', model: 'gpt-4.1-mini', maxTokens: 10 }
+[ai:complete] got result: AIMessage {
+  "id": "chatcmpl-BoyEYzeeRSGSQ5FdCqceTewfwBLw7",
+  "content": "\"Hello, world!\");",
+  "additional_kwargs": {},
+  "response_metadata": {
+    "tokenUsage": {
+      "promptTokens": 33,
+      "completionTokens": 6,
+      "totalTokens": 39
+    },
+    "finish_reason": "stop",
+    "model_name": "gpt-4.1-mini-2025-04-14",
+    "usage": {
+      "prompt_tokens": 33,
+      "completion_tokens": 6,
+      "total_tokens": 39,
+      "prompt_tokens_details": {
+        "cached_tokens": 0,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 0,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    },
+    "system_fingerprint": "fp_6f2eabb9a5"
+  },
+  "tool_calls": [],
+  "invalid_tool_calls": [],
+  "usage_metadata": {
+    "output_tokens": 6,
+    "input_tokens": 33,
+    "total_tokens": 39,
+    "input_token_details": {
+      "audio": 0,
+      "cache_read": 0
+    },
+    "output_token_details": {
+      "audio": 0,
+      "reasoning": 0
+    }
+  }
+}
+  ✔ ai:complete returns a valid, non-empty completion (951ms)
+[ai:classify] called with args: { query: 'console.log(' }
+[ai:classify] response: 1
+Calling [ai:classify] --> query: console.log( expected: 1 classification: 1
+[ai:classify] called with args: { query: 'Hello, how are you?' }
+[ai:classify] response: 2
+Calling [ai:classify] --> query: Hello, how are you? expected: 2 classification: 2
+[ai:classify] called with args: { query: 'Explain quantum computing in detail' }
+[ai:classify] response: 3
+Calling [ai:classify] --> query: Explain quantum computing in detail expected: 3 classification: 3
+[ai:classify] called with args: { query: "What's the weather today?" }
+[ai:classify] response: 4
+Calling [ai:classify] --> query: What's the weather today? expected: 4 classification: 4
+  ✔ ai: classifies the query (3602ms)
+[ai:classify] called with args: { query: "console.log('hello')" }
+[ai:classify] response: 1
+Classification result: { ok: true, data: 1 }
+  ✔ ai: classifies the query (639ms)
+[ai:chat] called with args: { query: "Hello, what's TypeScript?", reasoning: false, web: false }
+[Mode]: Basic Chat
+[ai:chat] Chat Response: Hello! TypeScript is a programming language developed and maintained by Microsoft. It's a superset of JavaScript, which means it builds on JavaScript by adding optional static types. This allows developers to catch errors early through a type system and improve the maintainability of their code. TypeScript code is transpiled into JavaScript, which means it can run anywhere JavaScript runs, like in web browsers or on Node.js. It's particularly popular in large-scale applications where the added type safety can help manage complexity. If you have any more questions about it or want to know how to get started, feel free to ask!
+Chat result: {
+  ok: true,
+  data: "Hello! TypeScript is a programming language developed and maintained by Microsoft. It's a superset of JavaScript, which means it builds on JavaScript by adding optional static types. This allows developers to catch errors early through a type system and improve the maintainability of their code. TypeScript code is transpiled into JavaScript, which means it can run anywhere JavaScript runs, like in web browsers or on Node.js. It's particularly popular in large-scale applications where the added type safety can help manage complexity. If you have any more questions about it or want to know how to get started, feel free to ask!"
+}
+  ✔ ai: chat returns conversational response (3360ms)
+
+  4 passing (9s)
+
+Tests finished with exit code: 0

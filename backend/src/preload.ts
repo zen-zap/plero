@@ -15,4 +15,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
     insertAtCursor: (path: string, insertion: string, marker?: string) =>  ipcRenderer.invoke("file:insertAtCursor", path, insertion, marker),
     aiComplete: (args: any) => ipcRenderer.invoke("ai:complete", args),
     tavilySearch: (args: any) => ipcRenderer.invoke("tavily:search", args),
+    aiChat: (args: any) => ipcRenderer.invoke("ai:chat", args),
+    aiClassify: (args: any) => ipcRenderer.invoke("ai:classify", args),
 });

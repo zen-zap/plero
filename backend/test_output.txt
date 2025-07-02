@@ -1,588 +1,203 @@
 
+> plero-backend@1.0.0 test:commonroot
+> node scripts/test_with_common_root.mjs
+
+Setting TEST_ROOT to: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+
+> plero-backend@1.0.0 build
+> tsc
+
+
 > plero-backend@1.0.0 test
-> electron-mocha --main dist/main.js dist/tests/ipc_tests/*.test.js
+> electron-mocha --main dist/main.js dist/tests/**/*.test.js
 
 
 
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+Renderer Console [warning] : %cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security
+  Policy set or a policy with "unsafe-eval" enabled. This exposes users of
+  this app to unnecessary security risks.
+
+For more information and help, consult
+https://electronjs.org/docs/tutorial/security.
+This warning will not show up
+once the app is packaged.
   - ai:complete returns a valid, non-empty completion
-[IPC] Calling  with [ 'dummy-f6660492-9403-40dc-8ada-93a0387b04db.rs' ]
-Status: { ok: false, error: 'File not found' }
-  1) completes a Rust function by inserting just before the cursor marker and keeps marker
-[IPC] Calling  with [ 'test-folder-4da7b3df-389e-4e41-b0d7-badfe066b457' ]
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+[ai:classify] called with args: { query: 'console.log(' }
+[ai:classify] response: 1
+[ai:classify] called with args: { query: 'Hello, how are you?' }
+[ai:classify] response: 2
+[ai:classify] called with args: { query: 'Explain quantum computing in detail' }
+[ai:classify] response: 3
+[ai:classify] called with args: { query: "What's the weather today?" }
+[ai:classify] response: 2
+  ✔ ai: classifies the query (4187ms)
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+[ai:classify] called with args: { query: "console.log('hello')" }
+[ai:classify] response: 1
+Classification result: { ok: true, data: 1 }
+  ✔ ai: classifies the query (647ms)
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+[ai:chat] called with args: { query: "Hello, what's TypeScript?", reasoning: false, web: false }
+[Mode]: Basic Chat
+[ai:chat] Chat Response: Hello! TypeScript is a programming language developed and maintained by Microsoft. It's a superset of JavaScript, which means it builds on JavaScript by adding static types. This helps developers catch errors early during development and makes the code more predictable and easier to debug. TypeScript compiles down to plain JavaScript, making it compatible with any environment that runs JavaScript, like web browsers or Node.js. It's particularly popular for large-scale applications where maintaining code quality and readability is crucial. If you have any more questions about it, feel free to ask!
+Chat result: {
+  ok: true,
+  data: "Hello! TypeScript is a programming language developed and maintained by Microsoft. It's a superset of JavaScript, which means it builds on JavaScript by adding static types. This helps developers catch errors early during development and makes the code more predictable and easier to debug. TypeScript compiles down to plain JavaScript, making it compatible with any environment that runs JavaScript, like web browsers or Node.js. It's particularly popular for large-scale applications where maintaining code quality and readability is crucial. If you have any more questions about it, feel free to ask!"
+}
+  ✔ ai: chat returns conversational response (3850ms)
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+[IPC] Calling  with [ 'dummy-f4a890a6-37fd-4ac7-ab45-ee912e578e5a.rs' ]
+[IPC] Success:  => fn add(a: i32, b: i32) -> i32 {
+    [[CURSOR]]
+}
+
+Status: {
+  ok: true,
+  data: 'fn add(a: i32, b: i32) -> i32 {\n    [[CURSOR]]\n}\n'
+}
+AI completion result: { ok: true, data: { content: 'return a + b;' }, error: null }
+[IPC] Calling  with [
+  'dummy-f4a890a6-37fd-4ac7-ab45-ee912e578e5a.rs',
+  'return a + b;',
+  undefined
+]
+[IPC] Success:  => undefined
+Insert at cursor result: { ok: true, data: undefined }
+[IPC] Calling  with [ 'dummy-f4a890a6-37fd-4ac7-ab45-ee912e578e5a.rs' ]
+[IPC] Success:  => fn add(a: i32, b: i32) -> i32 {
+    return a + b;[[CURSOR]]
+}
+
+Final file content: fn add(a: i32, b: i32) -> i32 {
+    return a + b;[[CURSOR]]
+}
+
+  ✔ completes a Rust function by inserting just before the cursor marker and keeps marker
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+[IPC] Calling  with [ 'test-folder-850e3795-4dbf-4e15-9d13-9fc4540e8b4a' ]
 [IPC] Success:  => undefined
 [IPC] Calling  with []
 [IPC] Success:  => [
-  { name: '.env', type: 'file', path: '.env' },
   {
-    name: 'dirinfo-5e034b9f-a78e-4fe5-bb9a-b3d98f5daac7',
+    name: 'test-folder-850e3795-4dbf-4e15-9d13-9fc4540e8b4a',
     type: 'folder',
-    path: 'dirinfo-5e034b9f-a78e-4fe5-bb9a-b3d98f5daac7',
+    path: 'test-folder-850e3795-4dbf-4e15-9d13-9fc4540e8b4a',
     children: []
-  },
-  {
-    name: 'dirinfo-d8b7ed2c-964a-44eb-933c-76a80057a73d',
-    type: 'folder',
-    path: 'dirinfo-d8b7ed2c-964a-44eb-933c-76a80057a73d',
-    children: []
-  },
-  {
-    name: 'dirinfo-f5d072ec-3c4e-4153-8ca9-b263f4c13326',
-    type: 'folder',
-    path: 'dirinfo-f5d072ec-3c4e-4153-8ca9-b263f4c13326',
-    children: []
-  },
-  {
-    name: 'dirinfo-ffca505a-099c-4c7b-ba86-410a890a17b2',
-    type: 'folder',
-    path: 'dirinfo-ffca505a-099c-4c7b-ba86-410a890a17b2',
-    children: []
-  },
-  {
-    name: 'dist',
-    type: 'folder',
-    path: 'dist',
-    children: [
-      [Object], [Object],
-      [Object], [Object],
-      [Object], [Object],
-      [Object]
-    ]
-  },
-  {
-    name: 'generated',
-    type: 'folder',
-    path: 'generated',
-    children: [ [Object] ]
-  },
-  {
-    name: 'meta-3acf5b78-5e9a-4462-b18c-5c621e99e7e2.txt',
-    type: 'file',
-    path: 'meta-3acf5b78-5e9a-4462-b18c-5c621e99e7e2.txt'
-  },
-  {
-    name: 'meta-627eb62a-35ef-4016-963a-8a6c77f3441f.txt',
-    type: 'file',
-    path: 'meta-627eb62a-35ef-4016-963a-8a6c77f3441f.txt'
-  },
-  {
-    name: 'meta-62906343-5989-4d24-a917-b2d0425cbb4d.txt',
-    type: 'file',
-    path: 'meta-62906343-5989-4d24-a917-b2d0425cbb4d.txt'
-  },
-  {
-    name: 'meta-fe359a9c-b2c0-4e52-b59a-1ccaea73dc8e.txt',
-    type: 'file',
-    path: 'meta-fe359a9c-b2c0-4e52-b59a-1ccaea73dc8e.txt'
-  },
-  {
-    name: 'newname-5481ea79-f2b5-411c-b1f3-651e5194f9c0.txt',
-    type: 'file',
-    path: 'newname-5481ea79-f2b5-411c-b1f3-651e5194f9c0.txt'
-  },
-  {
-    name: 'newname-6a717cfd-c34b-425e-8525-371b631585ed.txt',
-    type: 'file',
-    path: 'newname-6a717cfd-c34b-425e-8525-371b631585ed.txt'
-  },
-  {
-    name: 'newname-720e9827-c68b-4b91-96c8-50fd3072723f.txt',
-    type: 'file',
-    path: 'newname-720e9827-c68b-4b91-96c8-50fd3072723f.txt'
-  },
-  {
-    name: 'newname-c00f7fe3-fd7d-40a0-8b9f-8e5b398149c4.txt',
-    type: 'file',
-    path: 'newname-c00f7fe3-fd7d-40a0-8b9f-8e5b398149c4.txt'
-  },
-  {
-    name: 'node_modules',
-    type: 'folder',
-    path: 'node_modules',
-    children: [
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object],
-      ... 301 more items
-    ]
-  },
-  {
-    name: 'package-lock.json',
-    type: 'file',
-    path: 'package-lock.json'
-  },
-  { name: 'package.json', type: 'file', path: 'package.json' },
-  {
-    name: 'prisma',
-    type: 'folder',
-    path: 'prisma',
-    children: [ [Object], [Object] ]
-  },
-  {
-    name: 'scripts',
-    type: 'folder',
-    path: 'scripts',
-    children: [ [Object] ]
-  },
-  {
-    name: 'src',
-    type: 'folder',
-    path: 'src',
-    children: [
-      [Object], [Object],
-      [Object], [Object],
-      [Object], [Object],
-      [Object]
-    ]
-  },
-  { name: 'test_output.txt', type: 'file', path: 'test_output.txt' },
-  {
-    name: 'test_root_8918f0a3-6f8a-4bd2-8f98-9c4fc242875e',
-    type: 'folder',
-    path: 'test_root_8918f0a3-6f8a-4bd2-8f98-9c4fc242875e',
-    children: [ [Object] ]
-  },
-  {
-    name: 'test-0c03da10-9967-4ee5-9216-8a9e7e88e8e2.txt',
-    type: 'file',
-    path: 'test-0c03da10-9967-4ee5-9216-8a9e7e88e8e2.txt'
-  },
-  {
-    name: 'test-6186ffbe-f32a-46bd-81f5-1f2a9fc42061.txt',
-    type: 'file',
-    path: 'test-6186ffbe-f32a-46bd-81f5-1f2a9fc42061.txt'
-  },
-  {
-    name: 'test-bc0e15f2-6566-4340-a043-bd3552b9c721.txt',
-    type: 'file',
-    path: 'test-bc0e15f2-6566-4340-a043-bd3552b9c721.txt'
-  },
-  {
-    name: 'test-eba55791-315e-4eb1-a274-953898a744a0.txt',
-    type: 'file',
-    path: 'test-eba55791-315e-4eb1-a274-953898a744a0.txt'
-  },
-  {
-    name: 'test-folder-443d3303-688a-4bb7-a2d2-6d3aa159bd99',
-    type: 'folder',
-    path: 'test-folder-443d3303-688a-4bb7-a2d2-6d3aa159bd99',
-    children: []
-  },
-  {
-    name: 'test-folder-4da7b3df-389e-4e41-b0d7-badfe066b457',
-    type: 'folder',
-    path: 'test-folder-4da7b3df-389e-4e41-b0d7-badfe066b457',
-    children: []
-  },
-  {
-    name: 'test-folder-540ea741-e51d-490b-a427-c310fec3d087',
-    type: 'folder',
-    path: 'test-folder-540ea741-e51d-490b-a427-c310fec3d087',
-    children: []
-  },
-  {
-    name: 'test-folder-761edca6-b998-4685-918b-e5e5d273a5bb',
-    type: 'folder',
-    path: 'test-folder-761edca6-b998-4685-918b-e5e5d273a5bb',
-    children: []
-  },
-  {
-    name: 'test-folder-beb7386c-36b4-4045-8d89-09c286417563',
-    type: 'folder',
-    path: 'test-folder-beb7386c-36b4-4045-8d89-09c286417563',
-    children: []
-  },
-  {
-    name: 'tree-57ee6ff2-761b-4726-9532-71b6d8d030ea',
-    type: 'folder',
-    path: 'tree-57ee6ff2-761b-4726-9532-71b6d8d030ea',
-    children: [ [Object] ]
-  },
-  {
-    name: 'tree-abd8c77c-019e-45b7-b25e-aa98a040e213',
-    type: 'folder',
-    path: 'tree-abd8c77c-019e-45b7-b25e-aa98a040e213',
-    children: [ [Object] ]
-  },
-  {
-    name: 'tree-dd652698-0d79-462e-a864-1b4292c55824',
-    type: 'folder',
-    path: 'tree-dd652698-0d79-462e-a864-1b4292c55824',
-    children: [ [Object] ]
-  },
-  {
-    name: 'tree-eb3aa68e-8413-493f-8c41-8385226bb304',
-    type: 'folder',
-    path: 'tree-eb3aa68e-8413-493f-8c41-8385226bb304',
-    children: [ [Object] ]
-  },
-  { name: 'tsconfig.json', type: 'file', path: 'tsconfig.json' }
+  }
 ]
-  ✔ createFolder and getTree reflect new folder (314ms)
-[IPC] Calling  with [ 'test-bd938a97-4186-4996-83e6-f2202e3f2322.txt', 'Hello, IPC!' ]
+  ✔ createFolder and getTree reflect new folder
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+[IPC] Calling  with [ 'test-7de237b8-458b-466d-8ae2-c7f1bca63950.txt', 'Hello, IPC!' ]
 [IPC] Success:  => undefined
-[IPC] Calling  with [ 'test-bd938a97-4186-4996-83e6-f2202e3f2322.txt' ]
+[IPC] Calling  with [ 'test-7de237b8-458b-466d-8ae2-c7f1bca63950.txt' ]
 [IPC] Success:  => { exists: true }
-[IPC] Calling  with [ 'test-bd938a97-4186-4996-83e6-f2202e3f2322.txt' ]
+[IPC] Calling  with [ 'test-7de237b8-458b-466d-8ae2-c7f1bca63950.txt' ]
 [IPC] Success:  => Hello, IPC!
   ✔ saveFile, getFileContent, and exists
-[IPC] Calling  with [ 'meta-77d544c1-aaa2-497a-b02d-1bda3a0c0824.txt', 'Meta Info' ]
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+[IPC] Calling  with [ 'meta-c80ad745-106a-461f-827c-76d442685df6.txt', 'Meta Info' ]
 [IPC] Success:  => undefined
-[IPC] Calling  with [ 'meta-77d544c1-aaa2-497a-b02d-1bda3a0c0824.txt' ]
+[IPC] Calling  with [ 'meta-c80ad745-106a-461f-827c-76d442685df6.txt' ]
 [IPC] Success:  => {
   size: 9,
-  mtime: 2025-07-01T20:37:46.604Z,
-  ctime: 2025-07-01T20:37:46.604Z,
-  atime: 2025-07-01T20:37:46.604Z,
+  mtime: 2025-07-02T19:40:18.107Z,
+  ctime: 2025-07-02T19:40:18.107Z,
+  atime: 2025-07-02T19:40:18.107Z,
   isFile: true,
   isDirectory: false,
   mode: 33204,
-  ino: 7735253,
+  ino: 131891,
   uid: 1000,
   gid: 1000
 }
   ✔ stat returns metadata for file
-[IPC] Calling  with [ 'oldname-6040ce78-31c3-481b-b688-5639edf95ef8.txt', 'data' ]
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+[IPC] Calling  with [ 'oldname-c1251c0c-b998-465f-92d0-4f19b70c7753.txt', 'data' ]
 [IPC] Success:  => undefined
 [IPC] Calling  with [
-  'oldname-6040ce78-31c3-481b-b688-5639edf95ef8.txt',
-  'newname-be50f7d2-a525-443c-add4-f52f41aa72d3.txt'
+  'oldname-c1251c0c-b998-465f-92d0-4f19b70c7753.txt',
+  'newname-b08fdb4d-8cdb-415b-8f75-0847b34a6199.txt'
 ]
 [IPC] Success:  => undefined
-[IPC] Calling  with [ 'oldname-6040ce78-31c3-481b-b688-5639edf95ef8.txt' ]
+[IPC] Calling  with [ 'oldname-c1251c0c-b998-465f-92d0-4f19b70c7753.txt' ]
 [IPC] Success:  => { exists: false }
-[IPC] Calling  with [ 'newname-be50f7d2-a525-443c-add4-f52f41aa72d3.txt' ]
+[IPC] Calling  with [ 'newname-b08fdb4d-8cdb-415b-8f75-0847b34a6199.txt' ]
 [IPC] Success:  => { exists: true }
   ✔ renamePath renames file
-[IPC] Calling  with [ 'todelete-620a617f-1126-42e2-80b7-4278ce599e24.txt', 'bye' ]
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+[IPC] Calling  with [ 'todelete-2a42d703-e0c6-4f58-9984-4f2a005a3561.txt', 'bye' ]
 [IPC] Success:  => undefined
-[IPC] Calling  with [ 'todelete-620a617f-1126-42e2-80b7-4278ce599e24.txt' ]
+[IPC] Calling  with [ 'todelete-2a42d703-e0c6-4f58-9984-4f2a005a3561.txt' ]
 [IPC] Success:  => undefined
-[IPC] Calling  with [ 'todelete-620a617f-1126-42e2-80b7-4278ce599e24.txt' ]
+[IPC] Calling  with [ 'todelete-2a42d703-e0c6-4f58-9984-4f2a005a3561.txt' ]
 [IPC] Success:  => { exists: false }
   ✔ delFile deletes file
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
 [IPC] Calling  with [
-  'parent-a3ccd2f8-031e-4cf3-adce-1ce9a1a99400/child-ca437973-ea74-4d38-8608-e51afda8887d'
+  'parent-29052c67-2f62-480e-8a1a-d19d7f8d4e7c/child-a0a94888-f9bf-42c9-a525-bc4b76c827fe'
 ]
 [IPC] Success:  => undefined
 [IPC] Calling  with [
-  'parent-a3ccd2f8-031e-4cf3-adce-1ce9a1a99400/child-ca437973-ea74-4d38-8608-e51afda8887d/a-d363568f-0a22-4b9b-a947-a05a38fe52e6.txt',
+  'parent-29052c67-2f62-480e-8a1a-d19d7f8d4e7c/child-a0a94888-f9bf-42c9-a525-bc4b76c827fe/a-012751fa-178d-4e61-8c99-a54d7bdda548.txt',
   'abc'
 ]
 [IPC] Success:  => undefined
-[IPC] Calling  with [ 'parent-a3ccd2f8-031e-4cf3-adce-1ce9a1a99400' ]
+[IPC] Calling  with [ 'parent-29052c67-2f62-480e-8a1a-d19d7f8d4e7c' ]
 [IPC] Success:  => undefined
-[IPC] Calling  with [ 'parent-a3ccd2f8-031e-4cf3-adce-1ce9a1a99400' ]
+[IPC] Calling  with [ 'parent-29052c67-2f62-480e-8a1a-d19d7f8d4e7c' ]
 [IPC] Success:  => { exists: false }
   ✔ delFolder deletes folders recursively
-[IPC] Calling  with [ 'dirinfo-ea816acc-750c-43ab-8b04-8ad9164e1e88' ]
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
+[IPC] Calling  with [ 'dirinfo-6e2e0c7e-8c25-40d5-971f-5ebaf62707fe' ]
 [IPC] Success:  => undefined
-[IPC] Calling  with [ 'dirinfo-ea816acc-750c-43ab-8b04-8ad9164e1e88' ]
+[IPC] Calling  with [ 'dirinfo-6e2e0c7e-8c25-40d5-971f-5ebaf62707fe' ]
 [IPC] Success:  => {
   size: 4096,
-  mtime: 2025-07-01T20:37:46.617Z,
-  ctime: 2025-07-01T20:37:46.617Z,
-  atime: 2025-07-01T20:37:46.617Z,
+  mtime: 2025-07-02T19:40:18.130Z,
+  ctime: 2025-07-02T19:40:18.130Z,
+  atime: 2025-07-02T19:40:18.130Z,
   isFile: false,
   isDirectory: true,
   mode: 16893,
-  ino: 7905188,
+  ino: 131891,
   uid: 1000,
   gid: 1000
 }
   ✔ stat returns directory info
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
 [IPC] Calling  with [
-  'tree-2038c0d7-7d4e-43ed-9e9d-b500a262ecdc/branch-71adc2ed-413c-4759-b632-cebe8865a323'
+  'tree-d8346058-0809-471e-8fd1-9ecdde78f033/branch-ab5dc632-13f5-469c-9035-687b38ca539d'
 ]
 [IPC] Success:  => undefined
 [IPC] Calling  with [
-  'tree-2038c0d7-7d4e-43ed-9e9d-b500a262ecdc/branch-71adc2ed-413c-4759-b632-cebe8865a323/leaf-52f00110-19eb-4917-8175-7ea519a105cf.txt',
+  'tree-d8346058-0809-471e-8fd1-9ecdde78f033/branch-ab5dc632-13f5-469c-9035-687b38ca539d/leaf-47cc2407-8698-4d0d-a0e2-9e90bf38de09.txt',
   'leaf'
 ]
 [IPC] Success:  => undefined
 [IPC] Calling  with []
 [IPC] Success:  => [
-  { name: '.env', type: 'file', path: '.env' },
   {
-    name: 'dirinfo-5e034b9f-a78e-4fe5-bb9a-b3d98f5daac7',
+    name: 'tree-d8346058-0809-471e-8fd1-9ecdde78f033',
     type: 'folder',
-    path: 'dirinfo-5e034b9f-a78e-4fe5-bb9a-b3d98f5daac7',
-    children: []
-  },
-  {
-    name: 'dirinfo-d8b7ed2c-964a-44eb-933c-76a80057a73d',
-    type: 'folder',
-    path: 'dirinfo-d8b7ed2c-964a-44eb-933c-76a80057a73d',
-    children: []
-  },
-  {
-    name: 'dirinfo-ea816acc-750c-43ab-8b04-8ad9164e1e88',
-    type: 'folder',
-    path: 'dirinfo-ea816acc-750c-43ab-8b04-8ad9164e1e88',
-    children: []
-  },
-  {
-    name: 'dirinfo-f5d072ec-3c4e-4153-8ca9-b263f4c13326',
-    type: 'folder',
-    path: 'dirinfo-f5d072ec-3c4e-4153-8ca9-b263f4c13326',
-    children: []
-  },
-  {
-    name: 'dirinfo-ffca505a-099c-4c7b-ba86-410a890a17b2',
-    type: 'folder',
-    path: 'dirinfo-ffca505a-099c-4c7b-ba86-410a890a17b2',
-    children: []
-  },
-  {
-    name: 'dist',
-    type: 'folder',
-    path: 'dist',
-    children: [
-      [Object], [Object],
-      [Object], [Object],
-      [Object], [Object],
-      [Object]
-    ]
-  },
-  {
-    name: 'generated',
-    type: 'folder',
-    path: 'generated',
+    path: 'tree-d8346058-0809-471e-8fd1-9ecdde78f033',
     children: [ [Object] ]
-  },
-  {
-    name: 'meta-3acf5b78-5e9a-4462-b18c-5c621e99e7e2.txt',
-    type: 'file',
-    path: 'meta-3acf5b78-5e9a-4462-b18c-5c621e99e7e2.txt'
-  },
-  {
-    name: 'meta-627eb62a-35ef-4016-963a-8a6c77f3441f.txt',
-    type: 'file',
-    path: 'meta-627eb62a-35ef-4016-963a-8a6c77f3441f.txt'
-  },
-  {
-    name: 'meta-62906343-5989-4d24-a917-b2d0425cbb4d.txt',
-    type: 'file',
-    path: 'meta-62906343-5989-4d24-a917-b2d0425cbb4d.txt'
-  },
-  {
-    name: 'meta-77d544c1-aaa2-497a-b02d-1bda3a0c0824.txt',
-    type: 'file',
-    path: 'meta-77d544c1-aaa2-497a-b02d-1bda3a0c0824.txt'
-  },
-  {
-    name: 'meta-fe359a9c-b2c0-4e52-b59a-1ccaea73dc8e.txt',
-    type: 'file',
-    path: 'meta-fe359a9c-b2c0-4e52-b59a-1ccaea73dc8e.txt'
-  },
-  {
-    name: 'newname-5481ea79-f2b5-411c-b1f3-651e5194f9c0.txt',
-    type: 'file',
-    path: 'newname-5481ea79-f2b5-411c-b1f3-651e5194f9c0.txt'
-  },
-  {
-    name: 'newname-6a717cfd-c34b-425e-8525-371b631585ed.txt',
-    type: 'file',
-    path: 'newname-6a717cfd-c34b-425e-8525-371b631585ed.txt'
-  },
-  {
-    name: 'newname-720e9827-c68b-4b91-96c8-50fd3072723f.txt',
-    type: 'file',
-    path: 'newname-720e9827-c68b-4b91-96c8-50fd3072723f.txt'
-  },
-  {
-    name: 'newname-be50f7d2-a525-443c-add4-f52f41aa72d3.txt',
-    type: 'file',
-    path: 'newname-be50f7d2-a525-443c-add4-f52f41aa72d3.txt'
-  },
-  {
-    name: 'newname-c00f7fe3-fd7d-40a0-8b9f-8e5b398149c4.txt',
-    type: 'file',
-    path: 'newname-c00f7fe3-fd7d-40a0-8b9f-8e5b398149c4.txt'
-  },
-  {
-    name: 'node_modules',
-    type: 'folder',
-    path: 'node_modules',
-    children: [
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object], [Object], [Object],
-      [Object], [Object], [Object], [Object],
-      ... 301 more items
-    ]
-  },
-  {
-    name: 'package-lock.json',
-    type: 'file',
-    path: 'package-lock.json'
-  },
-  { name: 'package.json', type: 'file', path: 'package.json' },
-  {
-    name: 'prisma',
-    type: 'folder',
-    path: 'prisma',
-    children: [ [Object], [Object] ]
-  },
-  {
-    name: 'scripts',
-    type: 'folder',
-    path: 'scripts',
-    children: [ [Object] ]
-  },
-  {
-    name: 'src',
-    type: 'folder',
-    path: 'src',
-    children: [
-      [Object], [Object],
-      [Object], [Object],
-      [Object], [Object],
-      [Object]
-    ]
-  },
-  { name: 'test_output.txt', type: 'file', path: 'test_output.txt' },
-  {
-    name: 'test_root_8918f0a3-6f8a-4bd2-8f98-9c4fc242875e',
-    type: 'folder',
-    path: 'test_root_8918f0a3-6f8a-4bd2-8f98-9c4fc242875e',
-    children: [ [Object] ]
-  },
-  {
-    name: 'test-0c03da10-9967-4ee5-9216-8a9e7e88e8e2.txt',
-    type: 'file',
-    path: 'test-0c03da10-9967-4ee5-9216-8a9e7e88e8e2.txt'
-  },
-  {
-    name: 'test-6186ffbe-f32a-46bd-81f5-1f2a9fc42061.txt',
-    type: 'file',
-    path: 'test-6186ffbe-f32a-46bd-81f5-1f2a9fc42061.txt'
-  },
-  {
-    name: 'test-bc0e15f2-6566-4340-a043-bd3552b9c721.txt',
-    type: 'file',
-    path: 'test-bc0e15f2-6566-4340-a043-bd3552b9c721.txt'
-  },
-  {
-    name: 'test-bd938a97-4186-4996-83e6-f2202e3f2322.txt',
-    type: 'file',
-    path: 'test-bd938a97-4186-4996-83e6-f2202e3f2322.txt'
-  },
-  {
-    name: 'test-eba55791-315e-4eb1-a274-953898a744a0.txt',
-    type: 'file',
-    path: 'test-eba55791-315e-4eb1-a274-953898a744a0.txt'
-  },
-  {
-    name: 'test-folder-443d3303-688a-4bb7-a2d2-6d3aa159bd99',
-    type: 'folder',
-    path: 'test-folder-443d3303-688a-4bb7-a2d2-6d3aa159bd99',
-    children: []
-  },
-  {
-    name: 'test-folder-4da7b3df-389e-4e41-b0d7-badfe066b457',
-    type: 'folder',
-    path: 'test-folder-4da7b3df-389e-4e41-b0d7-badfe066b457',
-    children: []
-  },
-  {
-    name: 'test-folder-540ea741-e51d-490b-a427-c310fec3d087',
-    type: 'folder',
-    path: 'test-folder-540ea741-e51d-490b-a427-c310fec3d087',
-    children: []
-  },
-  {
-    name: 'test-folder-761edca6-b998-4685-918b-e5e5d273a5bb',
-    type: 'folder',
-    path: 'test-folder-761edca6-b998-4685-918b-e5e5d273a5bb',
-    children: []
-  },
-  {
-    name: 'test-folder-beb7386c-36b4-4045-8d89-09c286417563',
-    type: 'folder',
-    path: 'test-folder-beb7386c-36b4-4045-8d89-09c286417563',
-    children: []
-  },
-  {
-    name: 'tree-2038c0d7-7d4e-43ed-9e9d-b500a262ecdc',
-    type: 'folder',
-    path: 'tree-2038c0d7-7d4e-43ed-9e9d-b500a262ecdc',
-    children: [ [Object] ]
-  },
-  {
-    name: 'tree-57ee6ff2-761b-4726-9532-71b6d8d030ea',
-    type: 'folder',
-    path: 'tree-57ee6ff2-761b-4726-9532-71b6d8d030ea',
-    children: [ [Object] ]
-  },
-  {
-    name: 'tree-abd8c77c-019e-45b7-b25e-aa98a040e213',
-    type: 'folder',
-    path: 'tree-abd8c77c-019e-45b7-b25e-aa98a040e213',
-    children: [ [Object] ]
-  },
-  {
-    name: 'tree-dd652698-0d79-462e-a864-1b4292c55824',
-    type: 'folder',
-    path: 'tree-dd652698-0d79-462e-a864-1b4292c55824',
-    children: [ [Object] ]
-  },
-  {
-    name: 'tree-eb3aa68e-8413-493f-8c41-8385226bb304',
-    type: 'folder',
-    path: 'tree-eb3aa68e-8413-493f-8c41-8385226bb304',
-    children: [ [Object] ]
-  },
-  { name: 'tsconfig.json', type: 'file', path: 'tsconfig.json' }
+  }
 ]
-  ✔ getTree reflects nested structure (260ms)
+  ✔ getTree reflects nested structure
+Using common TEST_ROOT: /tmp/plero_common_test_577549ab-10c0-4748-9eac-93e77c4fa587
 [IPC] Calling  with [ 'test_cursor_insert.rs', 'a + b; ', undefined ]
-  2) insertAtCursor inserts just before the marker and leaves marker in file
+[IPC] Success:  => undefined
+  ✔ insertAtCursor inserts just before the marker and leaves marker in file
   - tavilySearch returns results for simple query
 
-  8 passing (899ms)
+  13 passing (9s)
   2 pending
-  2 failing
-
-  1) completes a Rust function by inserting just before the cursor marker and keeps marker:
-     Error: failed to read file: File not found
-      at Context.<anonymous> (dist/tests/ipc_tests/completionPipeline.test.js:61:15)
-
-  2) insertAtCursor inserts just before the marker and leaves marker in file:
-
-      AssertionError [ERR_ASSERTION]: insertAtCursor failed: File not found
-      + expected - actual
-
-      -false
-      +true
-      
-      at Context.<anonymous> (dist/tests/ipc_tests/filesIpc.test.js:173:26)
 
 
+> plero-backend@1.0.0 posttest
+> node scripts/cleanup_test_artifacts.mjs
 
+Artifact Cleanup done!
+Tests finished with exit code: 0

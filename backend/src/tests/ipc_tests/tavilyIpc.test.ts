@@ -14,6 +14,7 @@ before(async function () {
     webPreferences: {
       preload: path.join(__dirname, "../../preload.js"),
       contextIsolation: true,
+      sandbox: true,
     },
   });
   await win.loadURL("about:blank");

@@ -10,7 +10,12 @@
     "electron": "electron .",
     "test": "electron-mocha --main dist/main.js dist/tests/**/*.test.js",
     "posttest": "node scripts/cleanup_test_artifacts.mjs",
-    "test:commonroot":"node scripts/test_with_common_root.mjs"
+    "test:commonroot": "node scripts/test_with_common_root.mjs",
+    "test:ipc:ai": "node scripts/test_ai.mjs",
+    "test:ipc:tavily": "node scripts/test_tavily.mjs",
+    "test:ipc:files": "node scripts/test_files.mjs",
+    "test:ipc:completion": "node scripts/test_completion.mjs",
+    "test:pattern": "node scripts/run_test_with_pattern.mjs"
   },
   "keywords": [],
   "author": "zen-zap",
@@ -20,13 +25,15 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.47",
     "@langchain/core": "^0.3.61",
     "@langchain/openai": "^0.5.16",
     "@langchain/tavily": "^0.1.3",
     "@prisma/client": "^6.10.1",
     "cors": "^2.8.5",
-    "dotenv": "^17.0.0",
+    "dotenv": "^16.6.1",
     "express": "^5.1.0",
+    "ioredis": "^5.6.1",
     "langchain": "^0.3.29"
   },
   "devDependencies": {
@@ -44,8 +51,5 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
     "uuid": "^11.1.0"
-  },
-  "overrides": {
-    "@langchain/core": "0.3.0"
   }
 }

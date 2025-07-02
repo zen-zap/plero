@@ -10,7 +10,6 @@ import * as path from "path";
 import "./ipc/filesIpc";
 import "./ipc/tavily";
 import "./ipc/ai";
-// import "./ipc/ai"; // Add more as needed
 
 let mainWindow: BrowserWindow | null = null;
 
