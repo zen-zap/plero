@@ -4,7 +4,6 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { tavilySearch } from "./tavily";
-import { error } from "console";
 
 type CompletionOptions = {
     prompt: string,
