@@ -1,4 +1,4 @@
-import { chunkByLines, embed, embedChunks, cacheEmbeddings, getCachedEmbeddings, reEmbedChangedChunks } from "../services/rag";
+import { chunkByLines, embed, embedChunks, cacheEmbeddings, getCachedEmbeddings, reEmbedChangedChunks } from "../../services/rag";
 
 (async () => {
     const filePath = "test-file";
@@ -32,7 +32,7 @@ import { chunkByLines, embed, embedChunks, cacheEmbeddings, getCachedEmbeddings,
 
     console.log("\n=== Testing Caching ===");
     cacheEmbeddings(filePath, embeddings);
-    const cachedEmbeddings = getCachedEmbeddings(filePath);
+    const cachedEmbeddings = await getCachedEmbeddings(filePath);
     console.log(`Cached Embeddings: ${cachedEmbeddings?.length} vectors`);
     //cachedEmbeddings?.forEach((embedding, index) => {
     //    console.log(`Cached Embedding ${index + 1}: Vector length = ${embedding.length}, First 5 values = ${embedding.slice(0, 5)}`);

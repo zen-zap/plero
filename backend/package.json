@@ -15,7 +15,8 @@
     "test:ipc:tavily": "node scripts/test_tavily.mjs",
     "test:ipc:files": "node scripts/test_files.mjs",
     "test:ipc:completion": "node scripts/test_completion.mjs",
-    "test:pattern": "node scripts/run_test_with_pattern.mjs"
+    "test:pattern": "node scripts/run_test_with_pattern.mjs",
+    "test:rag": "node scripts/test_rag.mjs"
   },
   "keywords": [],
   "author": "zen-zap",

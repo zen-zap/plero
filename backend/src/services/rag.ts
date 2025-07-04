@@ -1,6 +1,7 @@
 import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
 import "dotenv/config";
 import crypto from "crypto";
+import redis from "./redis";
 
 const HUGGINGFACEHUB_API_KEY = process.env.HUGGINGFACEHUB_API_KEY;
 
@@ -61,15 +62,18 @@ export async function embedChunks(chunks: string[]) : Promise<number[][]> {
 }
 
 // let's cache the embeddings
-const embeddingCache: Map<string, number[][]> = new Map();
+// const embeddingCache: Map<string, number[][]> = new Map(); // --> this one was the local embedding cache .. shifted to redis
 
 /**
  * Caches embeddings for a file.
  * @param filePath The file path.
  * @param embeddings The embeddings to cache.
  */
-export function cacheEmbeddings(filePath: string, embeddings: number[][]): void {
-    embeddingCache.set(filePath, embeddings);
+export async function cacheEmbeddings(filePath: string, embeddings: number[][]) {
+    //embeddingCache.set(filePath, embeddings);
+    const key = `embeddings:${filePath}`;
+    const value = JSON.stringify(embeddings);
+    await redis.set(key, value);
 }
 
 /**
@@ -77,8 +81,11 @@ export function cacheEmbeddings(filePath: string, embeddings: number[][]): void 
  * @param filePath The file path.
  * @returns The cached embeddings or undefined if not cached.
  */
-export function getCachedEmbeddings(filePath: string): number[][] | undefined {
-    return embeddingCache.get(filePath);
+export async function getCachedEmbeddings(filePath: string): Promise<number[][] | undefined> {
+    //return embeddingCache.get(filePath);
+    const key = `embeddings:${filePath}`;
+    const value = await redis.get(key);
+    return value ? JSON.parse(value) : undefined;
 }
 
 // To detect changes in the chunks .. we'll hash the chunks
@@ -93,7 +100,7 @@ function hashChunk(chunk: string): string {
 }
 
 export async function reEmbedChangedChunks(filePath: string, chunks: string[]): Promise<number[][]> {
-    const cachedEmbeddings = getCachedEmbeddings(filePath) || [];
+    const cachedEmbeddings = (await getCachedEmbeddings(filePath)) || [];
     const updatedEmbeddings: number[][] = [];
 
     const cachedHashes = cachedEmbeddings.map((_: any, index: number) => hashChunk(chunks[index] || ""));
@@ -113,7 +120,7 @@ export async function reEmbedChangedChunks(filePath: string, chunks: string[]): 
     }
 
     // now we gotta update the global cache
-    cacheEmbeddings(filePath, updatedEmbeddings); 
+    await cacheEmbeddings(filePath, updatedEmbeddings);
     // this one updates the global cache -- made this way so swapping in redis would be easier later on
     return updatedEmbeddings;
 }
