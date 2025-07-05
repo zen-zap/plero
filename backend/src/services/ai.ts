@@ -4,6 +4,8 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { tavilySearch } from "./tavily";
+import * as rag from "./rag";
+import { max } from "@huggingface/transformers";
 
 type CompletionOptions = {
     prompt: string,
@@ -304,4 +306,53 @@ export async function chatRespond(
         console.error("Error in advancedChat: ", err);
         throw new Error(`Chat Response Failed: ${err instanceof Error ? err.message : String(err)}`);
     }
+}
+
+// RAG integration
+
+export async function completionRag({
+    fileContent,
+    prompt,
+    model = "gpt-4.1-mini",
+    temperature = 0.2,
+    maxTokens = 50,
+} : {
+    fileContent: string,
+    prompt: string,
+    model?: string,
+    temperature?: number,
+    maxTokens?: number,
+}): Promise<string> {
+    const chunks = rag.chunkByLines(fileContent, 50);
+
+    const cachedEmbeddings = await rag.getCachedEmbeddings("current-file");
+    let embeddings;
+
+    if(!cachedEmbeddings) {
+        embeddings = await rag.embedChunks(chunks);
+    } else {
+        embeddings = cachedEmbeddings;
+    }
+
+    const context = 
+        embeddings.map((embedding, index) => `Chunk ${index + 1}; ${embedding.slice(0, 5).join(", ")}`).join("\n");
+
+    const fullPrompt = `
+        Below is the context from the current file:
+        ${context}
+
+        User Prompt: ${prompt}
+
+        Complete the following code. Only output the next lines of code, with no explanations, comments, or extra text.
+    `;
+
+    const response = await completion({
+        prompt: fullPrompt,
+        model: model,
+        temperature: temperature,
+        maxTokens: maxTokens,
+
+    });
+
+    return response.content.toString();
 }

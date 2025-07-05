@@ -17,4 +17,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
     tavilySearch: (args: any) => ipcRenderer.invoke("tavily:search", args),
     aiChat: (args: any) => ipcRenderer.invoke("ai:chat", args),
     aiClassify: (args: any) => ipcRenderer.invoke("ai:classify", args),
+    aiCompletionRag: (args: any) => ipcRenderer.invoke("ai:completionRag", args),
 });
