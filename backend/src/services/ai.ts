@@ -1,11 +1,16 @@
 // in src/services/ai.ts
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+if(OPENAI_API_KEY == undefined) {
+    throw new Error("Failed to retrieve OPENAI_API_KEY");
+}
+
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { tavilySearch } from "./tavily";
 import * as rag from "./rag";
-import { max } from "@huggingface/transformers";
+import { matchesGlob } from "path";
+import { dot } from "@huggingface/transformers";
 
 type CompletionOptions = {
     prompt: string,
@@ -310,6 +315,15 @@ export async function chatRespond(
 
 // RAG integration
 
+/**
+ *
+ * Explantion:
+ * Chunks the fileContent by 50 lines in each chunk.
+ * Embeddings are cached.
+ * Relevant chunks are found using cosine similarity.
+ * Then passed as context in the prompt.
+ *
+ */
 export async function completionRag({
     fileContent,
     prompt,
@@ -330,12 +344,18 @@ export async function completionRag({
 
     if(!cachedEmbeddings) {
         embeddings = await rag.embedChunks(chunks);
+        await rag.cacheEmbeddings("current-file", embeddings);
     } else {
         embeddings = cachedEmbeddings;
     }
 
-    const context = 
-        embeddings.map((embedding, index) => `Chunk ${index + 1}; ${embedding.slice(0, 5).join(", ")}`).join("\n");
+    // prompt is embedded to find relevant chunks
+    const promptEmbedding = await rag.embed(prompt);
+
+    // we need to find similarities among the chunks to this prompt
+    const relChunks = findRelevantChunks(chunks, embeddings, promptEmbedding, 3);
+
+    const context = relChunks.map((chunk, index) => `Relevant Code Chunk ${index+1}:\n${chunk}`).join("\n\n");
 
     const fullPrompt = `
         Below is the context from the current file:
@@ -356,3 +376,40 @@ export async function completionRag({
 
     return response.content.toString();
 }
+
+export function findRelevantChunks(
+    chunks: string[],
+    embeddings: number[][],
+    queryEmbedding: number[],
+    topChunks: number,
+): string[] {
+    const similarities = embeddings.map((embedding, index) => ({
+        chunk: chunks[index],
+        similarity: cosineSimilarity(embedding, queryEmbedding),
+    }));
+
+    return similarities.sort((a, b) => b.similarity - a.similarity).slice(0, topChunks).map(item => item.chunk);
+}
+
+// To find cosine similarity between 2 string chunks, we would need to embed them into vectors first,
+// then we would need to find the cosine of the angle between these 2 vectors
+// at 1,  they are perfectly aligned
+// at 0,  they are perpendicular
+// at -1, they are opposites
+export function cosineSimilarity(a: number[], b: number[]): number {
+    if(a.length != b.length) {
+        throw new Error("both vectors must have same length for calculating cosine similarity");
+    }
+
+    const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
+
+    const magA = Math.hypot(...a);
+    const magB = Math.hypot(...b);
+
+    if(magA === 0 || magB === 0) {
+        return 0;
+    }
+
+    return dotProduct / (magA * magB);
+}
+

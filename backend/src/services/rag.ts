@@ -91,7 +91,7 @@ export async function getCachedEmbeddings(filePath: string): Promise<number[][] 
 // To detect changes in the chunks .. we'll hash the chunks
 
 /**
- * Generates a hash for a chunk of text.
+ * Generates a hash for a chunk of text. String hashing!
  * @param chunk The text chunk.
  * @returns The hash as a string.
  */

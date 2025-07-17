@@ -100,7 +100,7 @@ export function createFolder(relPath: string): void {
         throw new Error("Folder already exists");
     }
     
-    // Synchronouse version means, they block code until execution
+    // Synchronous version means, they block code until execution
     fs.mkdirSync(folderPath, {
         recursive: true
     });
