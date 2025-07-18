@@ -1,3 +1,5 @@
+// This file exposes the APIs from the main process to the renderer
+
 import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
