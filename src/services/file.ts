@@ -99,7 +99,7 @@ export function createFolder(relPath: string): void {
     if(fs.existsSync(folderPath)) {
         throw new Error("Folder already exists");
     }
-    
+
     // Synchronous version means, they block code until execution
     fs.mkdirSync(folderPath, {
         recursive: true
@@ -165,21 +165,21 @@ export function exists(relPath: string): boolean {
  * @throws if file not found or marker not present
  */
 export function insertAtCursor(
-  relPath: string,
-  insertion: string,
-  marker: string = '[[CURSOR]]'
+    relPath: string,
+    insertion: string,
+    marker: string = '[[CURSOR]]'
 ): void {
-  const filePath = safeJoin(ROOT, relPath);
-  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-    throw new Error("File not found");
-  }
-  let content = fs.readFileSync(filePath, "utf8");
-  const markerIdx = content.indexOf(marker);
-  if (markerIdx === -1) {
-    throw new Error(`Marker "${marker}" not found in file`);
-  }
-  // Insert insertion just before the marker
-  content =
-    content.slice(0, markerIdx) + insertion + content.slice(markerIdx);
-  fs.writeFileSync(filePath, content, "utf8");
+    const filePath = safeJoin(ROOT, relPath);
+    if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+        throw new Error("File not found");
+    }
+    let content = fs.readFileSync(filePath, "utf8");
+    const markerIdx = content.indexOf(marker);
+    if (markerIdx === -1) {
+        throw new Error(`Marker "${marker}" not found in file`);
+    }
+    // Insert insertion just before the marker
+    content =
+        content.slice(0, markerIdx) + insertion + content.slice(markerIdx);
+    fs.writeFileSync(filePath, content, "utf8");
 }

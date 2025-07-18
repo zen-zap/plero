@@ -1,0 +1,27 @@
+/* src/index.css */
+/* Make sure you have a basic CSS file for Tailwind directives */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add some global styles for a better look */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for a more modern feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #282a2e; /* Sidebar background */
+}
+::-webkit-scrollbar-thumb {
+  background: #4a4d52;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5d62;
+}

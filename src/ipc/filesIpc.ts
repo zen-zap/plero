@@ -4,9 +4,9 @@ import * as fileService from "../services/file";
 // Helper for consistent error handling
 const handle = (fn: Function) => async (_event: any, ...args: any[]) => {
   try {
-    console.log(`[IPC] Calling ${fn.name} with`, args);
+    //console.log(`[IPC] Calling ${fn.name} with`, args);
     const data = await fn(...args);
-    console.log(`[IPC] Success: ${fn.name} =>`, data);
+    //console.log(`[IPC] Success: ${fn.name} =>`, data);
     return { ok: true, data };
   } catch (error) {
     console.error(`[IPC] Error in ${fn.name}:`, error);

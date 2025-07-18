@@ -16,6 +16,7 @@
         "test:electron:tavily": "npm run build && electron-mocha --main dist/main.js dist/tests/ipc_tests/tavilyIpc.test.js",
         "test:redis": "mocha -r dotenv/config -r ts-node/register --timeout 30000 src/tests/rag_tests/redis.test.ts",
         "test:rag": "mocha -r dotenv/config -r ts-node/register --timeout 30000 src/tests/rag_tests/rag.test.ts",
+        "dev": "npm run build && npm start",
         "dev:react": "vite",
         "build:react": "vite build"
     },
