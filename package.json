@@ -1,7 +1,6 @@
 {
     "name": "plero",
     "version": "1.0.0",
-    "description": "",
     "main": "dist/main.js",
     "scripts": {
         "build": "tsc",
@@ -57,5 +56,6 @@
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "uuid": "^11.1.0"
-    }
+    },
+    "description": ""
 }
