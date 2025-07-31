@@ -3,10 +3,10 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 
-// Import IPC handlers - commenting out temporarily to get frontend working
-// import './ipc/ai';
-// import './ipc/filesIpc';
-// import './ipc/tavily';
+// Import IPC handlers
+import './ipc/ai';
+import './ipc/filesIpc';
+import './ipc/tavily';
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -21,9 +21,6 @@ function createWindow() {
     });
 
     win.loadURL(`file://${path.resolve(process.cwd(), 'dist/renderer/index.html')}`);
-    
-    // Open DevTools for debugging UI
-    win.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
