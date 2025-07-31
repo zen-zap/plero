@@ -3,15 +3,15 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 
-// Import IPC handlers
-import './ipc/ai';
-import './ipc/filesIpc';
-import './ipc/tavily';
+// Import IPC handlers - commenting out temporarily to get frontend working
+// import './ipc/ai';
+// import './ipc/filesIpc';
+// import './ipc/tavily';
 
 function createWindow() {
     const win = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1200,
+        height: 800,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -21,6 +21,9 @@ function createWindow() {
     });
 
     win.loadURL(`file://${path.resolve(process.cwd(), 'dist/renderer/index.html')}`);
+    
+    // Open DevTools for debugging UI
+    win.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);

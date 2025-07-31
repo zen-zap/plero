@@ -10,6 +10,9 @@ export default defineConfig({
     emptyOutDir: true,
   },
   plugins: [react()],
+  css: {
+    postcss: "./postcss.config.js",
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src/renderer"),
