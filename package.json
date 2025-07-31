@@ -1,11 +1,12 @@
 {
     "name": "plero",
     "version": "1.0.0",
-    "description": "",
     "main": "dist/main.js",
     "scripts": {
-        "build": "tsc",
-        "start": "npm run build:react && electron .",
+        "build": "tsc --noEmitOnError false",
+        "build:frontend": "npm run build:react && npm run build:main",
+        "build:main": "npx tsc src/main.ts src/preload.ts --outDir dist --target ES2020 --module commonjs --esModuleInterop --resolveJsonModule --moduleResolution node --allowSyntheticDefaultImports --skipLibCheck",
+        "start": "npm run build:frontend && electron .",
         "test": "node scripts/test_runner.mjs",
         "test:node": "echo '🧪 Running Node.js tests...' && mocha -r dotenv/config -r ts-node/register src/tests/rag_tests/*.test.ts",
         "test:electron": "echo '⚡ Running Electron tests...' && npm run build && electron-mocha --main dist/main.js dist/tests/ipc_tests/*.test.js",
@@ -38,9 +39,12 @@
         "@types/react": "^19.1.8",
         "@types/react-dom": "^19.1.6",
         "@vitejs/plugin-react": "^4.7.0",
+        "autoprefixer": "^10.4.20",
         "electron": "^37.2.3",
         "electron-mocha": "^13.1.0",
         "mocha": "^11.7.1",
+        "postcss": "^8.5.0",
+        "tailwindcss": "^3.4.0",
         "ts-node": "^10.9.2",
         "typescript": "^5.8.3",
         "vite": "^6.3.5"
@@ -57,5 +61,6 @@
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
         "uuid": "^11.1.0"
-    }
+    },
+    "description": ""
 }
