@@ -12,11 +12,13 @@ As you can see there are no other options except for viewing the files. I'll upd
 
 ## Usage:
 
-You'll to make your own OPENAI_API_KEY and other API keys as mentioned in the `.env.demo` file at the project root.
-Fill in the API keys and you're good to go.
+You'll to make your own OPENAI_API_KEY and other API keys as mentioned in the `demo.env` file at the project root.
+Fill in the API keys, rename the file to `.env` and you're good to go.
 
 The services are paid and I can't afford to provide any as a student.
 
 ## Contributions:
+
+I won't be going much further with this project once I'm done with the basic working features.
 If you want to work on something or have any feature you wanna integrate, feel free to reach out to me.
 PRs are welcome.
