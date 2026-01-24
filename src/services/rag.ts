@@ -1,12 +1,34 @@
 import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
 import "dotenv/config";
+import fs from "fs";
+import path from "path";
 import crypto from "crypto";
-import redis from "./redis";
 
 const HUGGINGFACEHUB_API_KEY = process.env.HUGGINGFACEHUB_API_KEY;
 
 if(!HUGGINGFACEHUB_API_KEY) {
-    throw new Error("HUGGINGFACEHUB_API_KEY not set in the environment variable");
+    throw new Error("HUGGINGFACEHUB_API_KEY not set");
+}
+
+// Local cache file path
+const CACHE_DIR = path.join(process.cwd(), ".plero");
+const CACHE_FILE = path.join(CACHE_DIR, "embeddings_cache.json");
+
+if(!fs.existsSync(CACHE_DIR)) {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+}
+
+let embeddingCache: Record<string, number[][]> = {};
+if(fs.existsSync(CACHE_FILE)) {
+    try {
+        embeddingCache = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
+    } catch (error) {
+        console.error("Error reading cache file:", error);
+    }
+}
+
+function saveCache() {
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(embeddingCache, null, 2), "utf-8");
 }
 
 /**
@@ -36,14 +58,7 @@ const embedder = new HuggingFaceInferenceEmbeddings({
  * @returns A promise that resolves to the embedding vector.
  */
 export async function embed(text: string): Promise<number[]> {
-    try {
-        const embeddings = await embedder.embedQuery(text);
-        console.log(`[embed] Input length: ${text.length}, Output vector length: ${embeddings.length}`);
-        return embeddings;
-    } catch (error) {
-        console.error("Error generating embeddings:", error);
-        throw new Error("Failed to generate embeddings");
-    }
+    return await embedder.embedQuery(text);
 }
 
 /**
@@ -53,12 +68,8 @@ export async function embed(text: string): Promise<number[]> {
  */
 export async function embedChunks(chunks: string[]) : Promise<number[][]> {
     const embeddings = await embedder.embedDocuments(chunks);
-    console.log(`[embedChunks] Got ${embeddings.length} chunk embeddings; each is ${embeddings[0].length}-dimensional`);
     return embeddings;
 }
-
-// let's cache the embeddings
-// const embeddingCache: Map<string, number[][]> = new Map(); // --> this one was the local embedding cache .. shifted to redis
 
 /**
  * Caches embeddings for a file.
@@ -66,10 +77,8 @@ export async function embedChunks(chunks: string[]) : Promise<number[][]> {
  * @param embeddings The embeddings to cache.
  */
 export async function cacheEmbeddings(filePath: string, embeddings: number[][]) {
-    //embeddingCache.set(filePath, embeddings);
-    const key = `embeddings:${filePath}`;
-    const value = JSON.stringify(embeddings);
-    await redis.set(key, value);
+    embeddingCache[filePath] = embeddings;
+    saveCache(); // persist to disk
 }
 
 /**
@@ -78,10 +87,7 @@ export async function cacheEmbeddings(filePath: string, embeddings: number[][]) 
  * @returns The cached embeddings or undefined if not cached.
  */
 export async function getCachedEmbeddings(filePath: string): Promise<number[][] | undefined> {
-    //return embeddingCache.get(filePath);
-    const key = `embeddings:${filePath}`;
-    const value = await redis.get(key);
-    return value ? JSON.parse(value) : undefined;
+    return embeddingCache[filePath];
 }
 
 /**
@@ -94,27 +100,25 @@ function hashChunk(chunk: string): string {
 }
 
 export async function reEmbedChangedChunks(filePath: string, chunks: string[]): Promise<number[][]> {
-    const cachedEmbeddings = (await getCachedEmbeddings(filePath)) || [];
-    const updatedEmbeddings: number[][] = [];
+    const cachedEmbeddings = await getCachedEmbeddings(filePath);
 
-    const cachedHashes = cachedEmbeddings.map((_: any, index: number) => hashChunk(chunks[index] || ""));
-
-    for(let i: number = 0; i<chunks.length; i++) {
-        const chunk = chunks[i];
-        const chunkHash = hashChunk(chunk);
-
-        if(cachedHashes[i] != chunkHash) {
-            // re-embedding the changed chunk
-            const re_embedded_chunk = await embed(chunk);
-            updatedEmbeddings[i] = re_embedded_chunk;
-        } else {
-            // we just use the cached embedding
-            updatedEmbeddings[i] = cachedEmbeddings[i];
-        }
+    // If there are no cached embeddings yet, embed and cache all chunks
+    if (!cachedEmbeddings) {
+        console.log("No cached embeddings found, embedding all chunks.");
+        const embeddings = await embedChunks(chunks);
+        await cacheEmbeddings(filePath, embeddings);
+        return embeddings;
     }
 
-    // now we gotta update the global cache
-    await cacheEmbeddings(filePath, updatedEmbeddings);
-    // this one updates the global cache -- made this way so swapping in redis would be easier later on
-    return updatedEmbeddings;
+    // If chunk count changed, re-embed all and update cache
+    if (cachedEmbeddings.length !== chunks.length) {
+        console.log("Chunk count changed, re-embedding all chunks.");
+        const embeddings = await embedChunks(chunks);
+        await cacheEmbeddings(filePath, embeddings);
+        return embeddings;
+    }
+
+    // For now return the cached embeddings when counts match.
+    // TODO: store and compare per-chunk hashes to re-embed only changed chunks.
+    return cachedEmbeddings;
 }
