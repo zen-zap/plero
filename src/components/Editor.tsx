@@ -19,6 +19,9 @@ interface EditorProps {
   onSave: (path: string, content: string) => void;
   onNew: () => void;
   onOpen: () => void;
+  openTabs?: TreeNode[];
+  onSelectTab?: (file: TreeNode) => void;
+  onCloseTab?: (path: string) => void;
 }
 
 export const Editor: React.FC<EditorProps> = ({
@@ -30,11 +33,12 @@ export const Editor: React.FC<EditorProps> = ({
   onSave,
   onNew,
   onOpen,
+  openTabs = [],
+  onSelectTab,
+  onCloseTab,
 }) => {
-  const { register } = useCommands(); // the editor subscribes to commands
+  const { register } = useCommands();
   const [localContent, setLocalContent] = useState(content);
-
-  // We need a ref to the editor view instance to perform imperative actions like undo/redo
   const viewRef = useRef<EditorView | null>(null);
 
   const handleCreateEditor = useCallback((view: EditorView) => {
@@ -45,50 +49,30 @@ export const Editor: React.FC<EditorProps> = ({
   useEffect(() => {
     const unsubSave = register("save", () => {
       if (activeFile) {
-        console.log("Editor received save command");
         onSave(activeFile.path, localContent);
         setIsDirty(false);
       }
     });
 
     const unsubUndo = register("undo", () => {
-      if (viewRef.current) {
-        undo(viewRef.current);
-      }
+      if (viewRef.current) undo(viewRef.current);
     });
 
     const unsubRedo = register("redo", () => {
-      if (viewRef.current) {
-        redo(viewRef.current);
-      }
+      if (viewRef.current) redo(viewRef.current);
     });
 
-    const unsubNew = register("new", () => {
-      console.log("Editor received new command");
-      onNew();
-    });
-
-    const unsubOpen = register("open", () => {
-      console.log("Editor received open command");
-      onOpen();
-    });
+    const unsubNew = register("new", () => onNew());
+    const unsubOpen = register("open", () => onOpen());
 
     const unsubCopy = register("copy", () => {
-      if (viewRef.current) {
-        document.execCommand("copy");
-      }
+      if (viewRef.current) document.execCommand("copy");
     });
-
     const unsubCut = register("cut", () => {
-      if (viewRef.current) {
-        document.execCommand("cut");
-      }
+      if (viewRef.current) document.execCommand("cut");
     });
-
     const unsubPaste = register("paste", () => {
-      if (viewRef.current) {
-        document.execCommand("paste");
-      }
+      if (viewRef.current) document.execCommand("paste");
     });
 
     return () => {
@@ -103,16 +87,19 @@ export const Editor: React.FC<EditorProps> = ({
     };
   }, [register, activeFile, localContent, onSave, onNew, onOpen, setIsDirty]);
 
-  // local state sync when new file loads
+  // sync when content changes externally
   useEffect(() => {
     setLocalContent(content);
     setIsDirty(false);
-  }, [content, activeFile?.path]);
+  }, [content, activeFile?.path, setIsDirty]);
 
-  const handleChange = useCallback((value: string) => {
-    setLocalContent(value);
-    setIsDirty(true);
-  }, []);
+  const handleChange = useCallback(
+    (value: string) => {
+      setLocalContent(value);
+      setIsDirty(true);
+    },
+    [setIsDirty],
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -126,15 +113,12 @@ export const Editor: React.FC<EditorProps> = ({
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [activeFile, isDirty, localContent, onSave]);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeFile, isDirty, localContent, onSave, setIsDirty]);
 
-  const getExtensions = () => {
+  const getExtensions = useCallback(() => {
     const path = activeFile?.path || "";
-    const exts = [];
-
+    const exts: any[] = [];
     if (
       path.endsWith(".js") ||
       path.endsWith(".jsx") ||
@@ -145,34 +129,52 @@ export const Editor: React.FC<EditorProps> = ({
     } else if (path.endsWith(".rs")) {
       exts.push(rust());
     }
-
     return exts;
-  };
+  }, [activeFile]);
 
-  if (isLoading) {
-    return <div className="p-4 text-lavender-grey">Loading file...</div>;
-  }
-
-  if (!activeFile) {
+  if (isLoading) return <div className="p-4 text-lavender-grey">Loading file...</div>;
+  if (!activeFile)
     return (
       <div className="flex flex-col items-center justify-center h-full text-lavender-grey bg-ink-black">
         <div className="mb-2">No file open</div>
-        <div className="text-sm text-dusk-blue">
-          Select a file from the explorer
-        </div>
+        <div className="text-sm text-dusk-blue">Select a file from the explorer</div>
       </div>
     );
-  }
 
   return (
     <div className="flex flex-col h-full bg-ink-black">
-      {/* Tab Header */}
-      <header className="bg-prussian-blue flex items-center border-b border-ink-black">
-        <div
-          className={`px-4 py-2 text-sm border-t-2 ${isDirty ? "border-lavender-grey text-alabaster-grey bg-ink-black" : "border-transparent text-lavender-grey hover:bg-dusk-blue/20"}`}
-        >
-          {activeFile.name}
-          {isDirty && <span className="ml-2 text-xs">●</span>}
+      {/* Tab Header (blend into editor) */}
+      <header className="bg-ink-black flex items-center overflow-x-auto">
+        <div className="flex gap-1 px-1 py-1">
+          {openTabs && openTabs.length > 0 ? (
+            openTabs.map((tab) => {
+              const isActive = activeFile.path === tab.path;
+              return (
+                <div
+                  key={tab.path}
+                  onClick={() => onSelectTab?.(tab)}
+                  className={`flex items-center space-x-2 px-3 py-2 text-sm cursor-pointer select-none ${
+                    isActive ? "bg-ink-black text-alabaster-grey" : "text-lavender-grey hover:bg-dusk-blue/10"
+                  }`}
+                >
+                  <span className="truncate max-w-[12rem]">{tab.name}</span>
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCloseTab?.(tab.path);
+                    }}
+                    className={`ml-2 text-lavender-grey hover:text-red-400 cursor-pointer ${
+                      isActive ? "group-hover:text-red-400" : ""
+                    }`}
+                  >
+                    ●
+                  </span>
+                </div>
+              );
+            })
+          ) : (
+            <div className="px-4 py-2 text-lavender-grey">No open tabs</div>
+          )}
         </div>
       </header>
 
@@ -193,7 +195,6 @@ export const Editor: React.FC<EditorProps> = ({
             indentOnInput: true,
             bracketMatching: true,
             closeBrackets: true,
-            autocompletion: true, // Standard IDE autocomplete (variables, keywords)
             highlightActiveLine: true,
           }}
         />

@@ -8,11 +8,8 @@ export function useFileSystem() {
   const [fileContent, setFileContent] = useState<string>("");
   const [isEditorLoading, setIsEditorLoading] = useState<boolean>(false);
   const [untitledCounter, setUntitledCounter] = useState<number>(1);
-
-  // Load file tree on startup
-  useEffect(() => {
-    loadTree();
-  }, []);
+  const [openTabs, setOpenTabs] = useState<TreeNode[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
 
   const loadTree = useCallback(() => {
     window.electronAPI
@@ -24,19 +21,72 @@ export function useFileSystem() {
       .catch((err) => setError(err.message));
   }, []);
 
+  // Load file tree on startup
+  useEffect(() => {
+    loadTree();
+  }, [loadTree]);
+
   const selectFile = useCallback((file: TreeNode) => {
-    if (file.type === "file") {
-      setIsEditorLoading(true);
-      setActiveFile(file);
-      window.electronAPI
-        .getFileContent(file.path)
-        .then((res) =>
-          setFileContent(res.ok ? res.data : "Error loading content."),
-        )
-        .catch((err) => setFileContent(`Error loading file: ${err.message}`))
-        .finally(() => setIsEditorLoading(false));
-    }
-  }, []);
+    if (file.type !== "file") return;
+    setIsEditorLoading(true);
+
+    setOpenTabs((prev) => {
+      if (prev.find((t) => t.path === file.path)) return prev;
+      return [...prev, file];
+    });
+
+    setActiveFile(file);
+    window.electronAPI
+      .getFileContent(file.path)
+      .then((res) => {
+        if (res.ok) {
+          setFileContent(res.data);
+          setIsEditorLoading(false);
+          setIsDirty(false);
+        } else {
+          setFileContent("");
+        }
+      })
+      .catch((err) => {
+        setError(err.message);
+        setFileContent("");
+      })
+      .finally(() => {
+        setIsEditorLoading(false);
+      });
+  });
+
+  const closeTab = useCallback(
+    async (path: string) => {
+      if (activeFile?.path === path && isDirty) {
+        const ok = window.confirm("You have unsaved changed. Close anyway?");
+        if (!ok) return false;
+      }
+
+      setOpenTabs((prev) => prev.filter((t) => t.path !== path));
+
+      // if active was closed, switch to last tab or null
+      if (activeFile?.path === path) {
+        setTimeout(() => {
+          setOpenTabs((prev) => {
+            const remaining = prev;
+            if (remaining.length > 0) {
+              const next = remaining[remaining.length - 1];
+              selectFile(next);
+            } else {
+              setActiveFile(null);
+              setFileContent("");
+              setIsDirty(false);
+            }
+
+            return prev;
+          });
+        }, 0);
+      }
+      return true;
+    },
+    [activeFile, isDirty, selectFile],
+  );
 
   const saveFile = useCallback(
     async (path: string, content: string) => {
@@ -184,8 +234,6 @@ export function useFileSystem() {
     [loadTree],
   );
 
-  const [isDirty, setIsDirty] = useState(false);
-
   return {
     tree,
     error,
@@ -202,5 +250,7 @@ export function useFileSystem() {
     deleteFile,
     createNewFile,
     createNewFolder,
+    openTabs,
+    closeTab,
   };
 }

@@ -87,51 +87,44 @@ export const MenuBar: React.FC = () => {
     };
 
     return (
-        <nav ref={menuRef} className="flex items-center text-sm bg-ink-black border-b border-prussian-blue select-none sticky top-0 z-50">
-           {/* Deep Sea Theme Application Title/Icon could go here. TODO: Get an application icon and put it here.*/}
-           <div className="px-4 py-1 font-bold text-dusk-blue mr-2">
-               PLERO
-           </div>
+        <nav
+            ref={menuRef}
+            className="flex items-center text-sm bg-ink-black border-b border-prussian-blue select-none sticky top-0 z-50"
+        >
+            <div className="px-4 py-1 font-bold text-dusk-blue mr-2">PLERO</div>
 
-            {MENU_STRUCTURE.map((menu) => (
-                <div key={menu.label} className="relative">
-                    <div
-                        className={`px-3 py-1 cursor-pointer transition-colors duration-150 ${
-                            activeMenu === menu.label 
-                            ? 'bg-dusk-blue text-alabaster-grey' 
-                            : 'text-lavender-grey hover:bg-prussian-blue hover:text-alabaster-grey'
-                        }`}
-                        onClick={() => handleMenuClick(menu.label)}
-                        onMouseEnter={() => handleMouseEnter(menu.label)}
-                    >
-                        {menu.label}
+            <div className="flex space-x-1">
+                {MENU_STRUCTURE.map((menu) => (
+                <div
+                    key={menu.label}
+                    onMouseEnter={() => handleMouseEnter(menu.label)}
+                    onClick={() => handleMenuClick(menu.label)}
+                    className="relative"
+                >
+                    <div className="px-3 py-1 cursor-pointer text-lavender-grey hover:text-alabaster-grey">
+                    {menu.label}
                     </div>
 
                     {activeMenu === menu.label && (
-                        <div className="absolute left-0 top-full min-w-[200px] bg-prussian-blue border border-dusk-blue shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
-                            {menu.items.map((item, index) => {
-                                if (item.type === 'separator') {
-                                    return <div key={index} className="h-px bg-dusk-blue my-1 mx-2 opacity-50" />;
-                                }
-                                return (
-                                    <div
-                                        key={index}
-                                        className="px-4 py-1.5 hover:bg-dusk-blue text-alabaster-grey flex justify-between items-center cursor-pointer group"
-                                        onClick={() => handleItemClick(item.action)}
-                                    >
-                                        <span>{item.label}</span>
-                                        {item.shortcut && (
-                                            <span className="text-lavender-grey text-xs group-hover:text-alabaster-grey ml-4 opacity-70">
-                                                {item.shortcut}
-                                            </span>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
+                    <div className="absolute mt-1 left-0 bg-prussian-blue border border-dusk-blue shadow-xl py-1 z-50 min-w-[160px] rounded">
+                        {menu.items.map((item, idx) =>
+                        item.type === "separator" ? (
+                            <div key={idx} className="h-px bg-dusk-blue my-1 mx-2 opacity-50" />
+                        ) : (
+                            <div
+                            key={idx}
+                            className="px-4 py-1.5 hover:bg-dusk-blue text-alabaster-grey cursor-pointer"
+                            onClick={() => handleItemClick(item.action)}
+                            >
+                            {item.label}
+                            </div>
+                        ),
+                        )}
+                    </div>
                     )}
                 </div>
-            ))}
+                ))}
+            </div>
         </nav>
     );
 };

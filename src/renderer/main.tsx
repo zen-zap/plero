@@ -29,6 +29,8 @@ const AppContent: React.FC = () => {
     deleteFile,
     createNewFile,
     createNewFolder,
+    openTabs,
+    closeTab,
   } = useFileSystem();
 
   // Register sidebar toggle and other app-level commands
@@ -86,72 +88,82 @@ const AppContent: React.FC = () => {
   }, [isResizing, resize, stopResizing]);
 
   return (
-    <ActionsProvider>
-      <div className="flex flex-col h-screen bg-ink-black text-alabaster-grey font-sans overflow-hidden">
-        {/* Note: MenuBar just dispatches 'save'. Editor hears it and calls saveFile. */}
-        <MenuBar />
-        <div className="flex flex-1 overflow-hidden">
-          {isSidebarVisible && (
-            <>
-              <aside
-                className="h-full bg-prussian-blue flex flex-col border-r border-ink-black"
-                style={{ width: `${sidebarWidth}px` }}
-              >
-                <header className="px-4 py-3 mb-2 flex items-center justify-between">
-                  <h1 className="text-xs font-bold text-lavender-grey uppercase tracking-wider">
-                    Explorer
-                  </h1>
-                </header>
-                <div className="flex-grow overflow-y-auto custom-scrollbar">
-                  {error && (
-                    <div className="text-red-400 p-2 text-sm">{error}</div>
-                  )}
-                  {!tree && !error && (
-                    <div className="text-lavender-grey p-4 text-sm text-center">
-                      Loading...
-                    </div>
-                  )}
-                  {tree && (
-                    <FileExplorer
-                      nodes={tree}
-                      activeFile={activeFile}
-                      onFileSelect={selectFile}
-                      onRename={renameFile}
-                      onDelete={deleteFile}
-                      onCreateFile={createNewFile}
-                      onCreateFolder={createNewFolder}
-                    />
-                  )}
-                </div>
-              </aside>
+    <div className="flex flex-col h-screen bg-ink-black text-alabaster-grey font-sans overflow-hidden">
+      {/* Note: MenuBar just dispatches 'save'. Editor hears it and calls saveFile. */}
+      <MenuBar />
+      <div className="flex flex-1 overflow-hidden">
+        {isSidebarVisible && (
+          <>
+            <aside
+              className="h-full bg-prussian-blue flex flex-col border-r border-ink-black"
+              style={{ width: `${sidebarWidth}px` }}
+            >
+              <header className="px-4 py-3 mb-2 flex items-center justify-between">
+                <h1 className="text-xs font-bold text-lavender-grey uppercase tracking-wider">
+                  Explorer
+                </h1>
 
-              {/* Resizable divider */}
-              <div
-                className="w-1 h-full bg-ink-black hover:bg-dusk-blue cursor-col-resize transition-colors duration-150"
-                onMouseDown={startResizing}
-                style={{
-                  userSelect: "none",
-                  backgroundColor: isResizing ? "#415a77" : undefined,
-                }}
-              />
-            </>
-          )}
+                {/* Collapse Button: hides the sidebar */}
+                <button
+                  title="Close sidebar"
+                  onClick={() => setIsSidebarVisible(false)}
+                  className="text-lavender-grey hover:text-alabaster-grey px-2 py-1 rounded"
+                >
+                  ✕
+                </button>
+              </header>
+              <div className="flex-grow overflow-y-auto custom-scrollbar">
+                {error && (
+                  <div className="text-red-400 p-2 text-sm">{error}</div>
+                )}
+                {!tree && !error && (
+                  <div className="text-lavender-grey p-4 text-sm text-center">
+                    Loading...
+                  </div>
+                )}
+                {tree && (
+                  <FileExplorer
+                    nodes={tree}
+                    activeFile={activeFile}
+                    onFileSelect={selectFile}
+                    onRename={renameFile}
+                    onDelete={deleteFile}
+                    onCreateFile={createNewFile}
+                    onCreateFolder={createNewFolder}
+                  />
+                )}
+              </div>
+            </aside>
 
-          <main className="flex-1 flex flex-col min-w-0 bg-ink-black">
-            <Editor
-              activeFile={activeFile}
-              content={fileContent}
-              isLoading={isEditorLoading}
-              isDirty={isDirty}
-              setIsDirty={setIsDirty}
-              onSave={saveFile}
-              onNew={newFile}
-              onOpen={openFileDialog}
+            {/* Resizable divider */}
+            <div
+              className="w-1 h-full bg-ink-black hover:bg-dusk-blue cursor-col-resize transition-colors duration-150"
+              onMouseDown={startResizing}
+              style={{
+                userSelect: "none",
+                backgroundColor: isResizing ? "#415a77" : undefined,
+              }}
             />
-          </main>
-        </div>
+          </>
+        )}
+
+        <main className="flex-1 flex flex-col min-w-0 bg-ink-black">
+          <Editor
+            activeFile={activeFile}
+            content={fileContent}
+            isLoading={isEditorLoading}
+            isDirty={isDirty}
+            setIsDirty={setIsDirty}
+            onSave={saveFile}
+            onNew={newFile}
+            onOpen={openFileDialog}
+            onSelectTab={selectFile}
+            openTabs={openTabs}
+            onCloseTab={closeTab}
+          />
+        </main>
       </div>
-    </ActionsProvider>
+    </div>
   );
 };
 
@@ -163,4 +175,8 @@ const App: React.FC = () => {
   );
 };
 
-ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
+const container = document.getElementById("root")!;
+if (!(window as any).__appRoot) {
+  (window as any).__appRoot = ReactDOM.createRoot(container);
+}
+(window as any).__appRoot.render(<App />);

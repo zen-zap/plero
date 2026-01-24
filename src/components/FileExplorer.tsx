@@ -54,6 +54,8 @@ const FolderIcon = ({ isOpen }: { isOpen: boolean }) => (
   </svg>
 );
 
+// we need to define a node to represent this in the DOM tree
+// this also helps with recursive rendering of folders
 const Node: React.FC<{
   node: TreeNode;
   activeFile: TreeNode | null;
@@ -78,7 +80,10 @@ const Node: React.FC<{
     x: number;
     y: number;
   } | null>(null);
+  const [creating, setCreating] = useState<null | "file" | "folder">(null);
+  const [newItemName, setNewItemName] = useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const newItemRef = React.useRef<HTMLInputElement>(null);
 
   const isFolder = node.type === "folder";
   const isActive = activeFile?.path === node.path;
@@ -120,26 +125,34 @@ const Node: React.FC<{
     closeContextMenu();
   };
 
-  const handleNewFile = async () => {
-    const fileName = window.prompt("Enter file name:");
-    if (fileName) {
-      const folderPath = isFolder
-        ? node.path
-        : node.path.split("/").slice(0, -1).join("/");
-      await onCreateFile(folderPath, fileName);
+  const handleNewFile = () => {
+    setCreating("file");
+    setNewItemName("");
+  };
+
+  const handleNewFolder = () => {
+    setCreating("folder");
+    setNewItemName("");
+  };
+
+  const submitNewItem = async () => {
+    if (!newItemName) return;
+    const folderPath = isFolder
+      ? node.path
+      : node.path.split("/").slice(0, -1).join("/");
+    if (creating === "file") {
+      await onCreateFile(folderPath, newItemName);
+    } else if (creating === "folder") {
+      await onCreateFolder(folderPath, newItemName);
     }
+    setCreating(null);
+    setNewItemName("");
     closeContextMenu();
   };
 
-  const handleNewFolder = async () => {
-    const folderName = window.prompt("Enter folder name:");
-    if (folderName) {
-      const folderPath = isFolder
-        ? node.path
-        : node.path.split("/").slice(0, -1).join("/");
-      await onCreateFolder(folderPath, folderName);
-    }
-    closeContextMenu();
+  const cancelNewItem = () => {
+    setCreating(null);
+    setNewItemName("");
   };
 
   const submitRename = async () => {
@@ -226,18 +239,53 @@ const Node: React.FC<{
           {isFolder && (
             <>
               <div className="h-px bg-dusk-blue my-1 mx-2 opacity-50" />
-              <div
-                className="px-4 py-1.5 hover:bg-dusk-blue text-alabaster-grey cursor-pointer"
-                onClick={handleNewFile}
-              >
-                New File
-              </div>
-              <div
-                className="px-4 py-1.5 hover:bg-dusk-blue text-alabaster-grey cursor-pointer"
-                onClick={handleNewFolder}
-              >
-                New Folder
-              </div>
+              {creating ? (
+                <div className="px-3 py-1">
+                  <input
+                    ref={newItemRef}
+                    value={newItemName}
+                    onChange={(e) => setNewItemName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") submitNewItem();
+                      if (e.key === "Escape") cancelNewItem();
+                    }}
+                    className="w-full bg-prussian-blue text-alabaster-grey px-2 py-1 rounded outline-none border border-dusk-blue"
+                    placeholder={
+                      creating === "file" ? "New file name" : "New folder name"
+                    }
+                    autoFocus
+                  />
+                  <div className="flex gap-2 mt-2 px-1">
+                    <button
+                      className="px-3 py-1 bg-dusk-blue text-alabaster-grey rounded"
+                      onClick={submitNewItem}
+                    >
+                      Create
+                    </button>
+                    <button
+                      className="px-3 py-1 bg-prussian-blue text-lavender-grey rounded"
+                      onClick={cancelNewItem}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="px-4 py-1.5 hover:bg-dusk-blue text-alabaster-grey cursor-pointer"
+                    onClick={handleNewFile}
+                  >
+                    New File
+                  </div>
+                  <div
+                    className="px-4 py-1.5 hover:bg-dusk-blue text-alabaster-grey cursor-pointer"
+                    onClick={handleNewFolder}
+                  >
+                    New Folder
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
@@ -266,6 +314,10 @@ const Node: React.FC<{
   );
 };
 
+// we defined a single node above, so how do we render multiple nodes?
+// Here, we create a FileExplorer component that returns a list of nodes in an array. These nodes can be files or folders. They are rendered recursively using the Node component defined above.
+
+// the node is defined above, here we just need to return the nodes
 export const FileExplorer: React.FC<FileExplorerProps> = ({
   nodes,
   activeFile,
