@@ -15,7 +15,7 @@ export function useFileSystem() {
     window.electronAPI
       .getTree()
       .then((res) => {
-        if (res.ok) setTree(res.data);
+        if (res.ok) setTree(res.data ?? null);
         else setError("Failed to load file tree.");
       })
       .catch((err) => setError(err.message));
@@ -40,10 +40,11 @@ export function useFileSystem() {
       .getFileContent(file.path)
       .then((res) => {
         if (res.ok) {
-          setFileContent(res.data);
+          setFileContent(res.data ?? "");
           setIsEditorLoading(false);
           setIsDirty(false);
         } else {
+          setError(res.error ?? "Failed to load file content");
           setFileContent("");
         }
       })
@@ -54,7 +55,7 @@ export function useFileSystem() {
       .finally(() => {
         setIsEditorLoading(false);
       });
-  });
+  }, []);
 
   const closeTab = useCallback(
     async (path: string) => {
@@ -132,12 +133,12 @@ export function useFileSystem() {
         if (contentRes.ok) {
           const fileName = res.data.split("/").pop() || res.data;
           const newFileNode: TreeNode = {
-            path: res.data,
+            path: res.data!,
             name: fileName,
             type: "file",
           };
           setActiveFile(newFileNode);
-          setFileContent(contentRes.data);
+          setFileContent(contentRes.data ?? "");
           setIsDirty(false);
           return true;
         }

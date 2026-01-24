@@ -4,6 +4,7 @@ import "../index.css";
 import { FileExplorer } from "../components/FileExplorer";
 import { Editor } from "../components/Editor";
 import { MenuBar } from "../components/MenuBar";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { ActionsProvider, useCommands } from "./contexts/ActionsContext";
 import { useFileSystem } from "./hooks/useFileSystem";
 
@@ -169,9 +170,11 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <ActionsProvider>
-      <AppContent />
-    </ActionsProvider>
+    <ErrorBoundary>
+      <ActionsProvider>
+        <AppContent />
+      </ActionsProvider>
+    </ErrorBoundary>
   );
 };
 

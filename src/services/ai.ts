@@ -30,7 +30,7 @@ type CompletionOptions = {
  */
 export async function completion({
     prompt,
-    model = "gpt-4.1-mini",
+    model = "gpt-5.1-codex-mini",
     temperature = 0.2,
     maxTokens = 50,
 }: CompletionOptions) {
@@ -87,7 +87,7 @@ const options = [
  */
 export async function classify({
     query,
-    model = "gpt-3.5-turbo"
+    model = "gpt-5.1-codex-mini"
 }: ClassifyOptions) {
 
     const classifyPrompt = new PromptTemplate({
@@ -130,7 +130,7 @@ Classification:`
  */
 export async function basicChat(
     query: string,
-    model: string = "gpt-4o",
+    model: string = "gpt-5.1-mini",
     temperature: number = 0.5,
     maxTokens: number = 300,
 ): Promise<string> {
@@ -169,7 +169,7 @@ export async function basicChat(
  */
 export async function reasonerHelper(
     query: string,
-    model: string = "gpt-4o",
+    model: string = "gpt-5.1",
     temperature: number = 0.5,
     maxTokens: number = 300,
 ): Promise<string> {
@@ -216,7 +216,7 @@ Analysis:`
  */
 export async function webHelper(
     query: string,
-    model: string = "gpt-4o",
+    model: string = "gpt-5.1-mini",
     temperature: number = 0.2,
     maxTokens: number = 300,
 ): Promise<string> {
@@ -274,7 +274,7 @@ export async function chatRespond(
     query: string,
     reasoning: boolean = false,
     web: boolean = false,
-    model: string = "gpt-4o",
+    model: string = "gpt-5.1-mini",
 ): Promise<string> {
 
     if (!OPENAI_API_KEY) {
@@ -326,7 +326,7 @@ export async function chatRespond(
 export async function completionRag({
     fileContent,
     prompt,
-    model = "gpt-4.1-mini",
+    model = "gpt-5.1-codex-mini",
     temperature = 0.2,
     maxTokens = 50,
 } : {
@@ -416,4 +416,3 @@ export function cosineSimilarity(embedding: number[], queryEmbedding: number[]):
 
     return dotProduct / (magA * magB);
 }
-
