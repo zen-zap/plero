@@ -2,12 +2,14 @@
 
 Code-editor with AI code-completion using **OPENAI** API.
 
-Currently, just the file explorer is rendered with a space to view the code. There are no usable features available in the UI yet.
+Yes, you may find a lot of the parts written by AI. 
 
-Yes, you may find a lot of the parts written by AI. I'm not a web developer. Any code from AI has been reviewed and iterated upon by me.
+I'm not a web developer. Any code from AI has been reviewed and iterated upon by me.
 
-## How it Looks:
-<img width="1228" height="866" alt="image" src="https://github.com/user-attachments/assets/0eaf667a-f112-44ee-8156-9f904a451193" />
+## How it Looks: (in Arch -- hyprland compositor)
+<img width="1917" height="1052" alt="image" src="https://github.com/user-attachments/assets/8cff9370-0263-4d35-a5a4-4268e8860936" />
+
+Appearance may vary depending on window manager, compositor, and theme.
 
 As you can see there are no other options except for viewing the files. I'll update the demonstration when I have a major improvement to the code.
 
