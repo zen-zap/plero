@@ -28,6 +28,7 @@
     "license": "ISC",
     "type": "commonjs",
     "dependencies": {
+        "@codemirror/autocomplete": "^6.20.0",
         "@codemirror/lang-javascript": "^6.2.4",
         "@codemirror/lang-rust": "^6.0.2",
         "@huggingface/inference": "^4.13.10",
@@ -62,7 +63,7 @@
         "electron-mocha": "^13.0.0",
         "jsdom": "^27.4.0",
         "postcss": "^8.5.6",
-        "tailwindcss": "^4.1.18",
+        "tailwindcss": "^3.4.17",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.3",
         "vite": "^7.3.1",

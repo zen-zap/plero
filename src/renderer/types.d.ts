@@ -21,6 +21,13 @@ export type FileStat = {
   gid: number;
 };
 
+// AI Ghost Completion options
+export type GhostOptions = {
+  prefix: suffix;
+  suffix: string;
+  language: string;
+};
+
 // AI completion options
 export type CompletionOptions = {
   prompt: string;
@@ -95,6 +102,7 @@ declare global {
       openDialog: () => Promise<ApiResponse<string>>;
 
       // AI operations
+      aiGhost: (options: GhostOptions) => Promise<ApiResponse<string>>;
       aiComplete: (
         options: CompletionOptions,
       ) => Promise<ApiResponse<{ content: string }>>;
@@ -108,6 +116,11 @@ declare global {
       tavilySearch: (
         options: TavilySearchOptions,
       ) => Promise<ApiResponse<TavilySearchResult>>;
+
+      // Window operations
+      zoomIn: () => Promise<ApiResponse<void>>;
+      zoomOut: () => Promise<ApiResponse<void>>;
+      resetZoom: () => Promise<ApiResponse<void>>;
     };
   }
 }

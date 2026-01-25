@@ -7,6 +7,7 @@ import path from "path";
 import "./ipc/ai";
 import "./ipc/filesIpc";
 import "./ipc/tavily";
+import "./ipc/window";
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -17,7 +18,7 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      webSecurity: false,
+      webSecurity: false, // Required for Vite dev server in Electron
     },
   });
 

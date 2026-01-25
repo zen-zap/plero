@@ -20,13 +20,19 @@ contextBridge.exposeInMainWorld("electronAPI", {
   openDialog: () => ipcRenderer.invoke("file:openDialog"),
 
   // AI operations
-  aiComplete: (args: any) => ipcRenderer.invoke("ai:complete", args),
-  aiChat: (args: any) => ipcRenderer.invoke("ai:chat", args),
-  aiClassify: (args: any) => ipcRenderer.invoke("ai:classify", args),
-  aiCompletionRag: (args: any) => ipcRenderer.invoke("ai:completionRag", args),
+  aiGhost: (args: any) => ipcRenderer.invoke("ai:ghost", args),
+  //aiComplete: (args: any) => ipcRenderer.invoke("ai:complete", args),
+  //aiChat: (args: any) => ipcRenderer.invoke("ai:chat", args),
+  //aiClassify: (args: any) => ipcRenderer.invoke("ai:classify", args),
+  //aiCompletionRag: (args: any) => ipcRenderer.invoke("ai:completionRag", args),
 
   // Tavily operations
   tavilySearch: (args: any) => ipcRenderer.invoke("tavily:search", args),
+
+  // Window operations
+  zoomIn: () => ipcRenderer.invoke("window:zoom-in"),
+  zoomOut: () => ipcRenderer.invoke("window:zoom-out"),
+  resetZoom: () => ipcRenderer.invoke("window:reset-zoom"),
 });
 
 // these are accessible in the renderer process via window.electronAPI

@@ -46,12 +46,21 @@ const AppContent: React.FC = () => {
       }
     });
 
-    // Note: copy, cut, paste, zoom-in, zoom-out are handled by the browser/editor natively
-    // We can enhance these later if needed
+    const unsubZoomIn = register("zoom-in", () => {
+      window.electronAPI?.zoomIn?.();
+    });
+
+    const unsubZoomOut = register("zoom-out", () => {
+      window.electronAPI?.zoomOut?.();
+    });
+
+    // Note: copy, cut, paste are handled by the browser/editor natively
 
     return () => {
       unsubToggleSidebar();
       unsubExit();
+      unsubZoomIn();
+      unsubZoomOut();
     };
   }, [register]);
 
