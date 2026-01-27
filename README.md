@@ -1,3 +1,5 @@
+THIS IS THE UNREVIEWED BRANCH. I GOT FED UP AND CLAUDE IMPROVE THE UI A LOT.
+
 # plero
 
 Code-editor with AI code-completion using **OPENAI** API.
@@ -7,7 +9,8 @@ Yes, you may find a lot of the parts written by AI.
 I'm not a web developer. Any code from AI has been reviewed and iterated upon by me.
 
 ## How it Looks: (in Arch -- hyprland compositor)
-<img width="1917" height="1052" alt="image" src="https://github.com/user-attachments/assets/8cff9370-0263-4d35-a5a4-4268e8860936" />
+<img width="1920" height="1058" alt="image" src="https://github.com/user-attachments/assets/27193d6f-3136-4c14-a041-709abcf4327c" />
+
 
 Appearance may vary depending on window manager, compositor, and theme.
 
