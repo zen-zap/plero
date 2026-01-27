@@ -22,7 +22,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // AI operations
   aiGhost: (args: any) => ipcRenderer.invoke("ai:ghost", args),
   //aiComplete: (args: any) => ipcRenderer.invoke("ai:complete", args),
-  //aiChat: (args: any) => ipcRenderer.invoke("ai:chat", args),
+  aiChat: (args: any) => ipcRenderer.invoke("ai:chat", args),
+  aiRagChat: (args: any) => ipcRenderer.invoke("ai:ragChat", args),
   //aiClassify: (args: any) => ipcRenderer.invoke("ai:classify", args),
   //aiCompletionRag: (args: any) => ipcRenderer.invoke("ai:completionRag", args),
 

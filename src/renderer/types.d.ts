@@ -39,9 +39,22 @@ export type CompletionOptions = {
 // AI chat options
 export type ChatOptions = {
   query: string;
-  reasoning?: boolean;
-  web?: boolean;
+  mode?: "chat" | "reasoning" | "web" | "auto";
+  context?: string;
   model?: string;
+};
+
+// AI RAG chat options
+export type RagChatOptions = {
+  query: string;
+  fileContent: string;
+  filePath?: string;
+};
+
+// AI chat response
+export type ChatResponse = {
+  data: string;
+  mode?: string;
 };
 
 // AI classify options
@@ -106,7 +119,10 @@ declare global {
       aiComplete: (
         options: CompletionOptions,
       ) => Promise<ApiResponse<{ content: string }>>;
-      aiChat: (options: ChatOptions) => Promise<ApiResponse<string>>;
+      aiChat: (
+        options: ChatOptions,
+      ) => Promise<ApiResponse<string> & { mode?: string }>;
+      aiRagChat: (options: RagChatOptions) => Promise<ApiResponse<string>>;
       aiClassify: (options: ClassifyOptions) => Promise<ApiResponse<number>>;
       aiCompletionRag: (
         options: RagCompletionOptions,
