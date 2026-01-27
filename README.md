@@ -11,7 +11,9 @@ I'm not a web developer. Any code from AI has been reviewed and iterated upon by
 
 Appearance may vary depending on window manager, compositor, and theme.
 
-As you can see there are no other options except for viewing the files. I'll update the demonstration when I have a major improvement to the code.
+## Current Stage:
+
+You can get ghost completion suggestions when writing code in rust and typescript. Of course, it is not extensively tested with different types on syntax but it works (hopefully).
 
 ## Usage:
 
