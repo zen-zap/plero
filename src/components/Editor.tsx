@@ -71,11 +71,24 @@ export const Editor: React.FC<EditorProps> = ({
         language = "typescript";
 
       try {
+        console.log("[Editor] aiGhost request", {
+          language,
+          prefixLen: prefix.length,
+          suffixLen: suffix.length,
+        });
         const result = await window.electronAPI.aiGhost({
           prefix,
           suffix,
           language,
         });
+
+        console.log(
+          "[Editor] aiGhost result",
+          result &&
+            (result.ok
+              ? { ok: true, dataLen: result.data?.length }
+              : { ok: false, error: result.error }),
+        );
 
         if (!result.ok || !result.data) return null;
 
@@ -91,7 +104,10 @@ export const Editor: React.FC<EditorProps> = ({
           ],
         };
       } catch (err) {
-        console.error("Ghost Completion Error:", err);
+        console.error("Ghost Completion Error:", err, {
+          prefixLen: prefix.length,
+          suffixLen: suffix.length,
+        });
         return null;
       }
     },
@@ -312,7 +328,9 @@ export const Editor: React.FC<EditorProps> = ({
           )}
 
           {/* Dirty indicator */}
-          {isDirty && <span className="text-yellow-400/80">● Modified</span>}
+          {isDirty && (
+            <span className="text-yellow-400/80">● File Modified</span>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
