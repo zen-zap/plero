@@ -126,7 +126,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
       {children}
 
       {/* Toast Container */}
-      <div className="fixed bottom-4 right-4 z-[200] flex flex-col gap-2">
+      <div className="fixed bottom-6 right-6 z-[200] flex flex-col gap-3">
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
         ))}
@@ -144,40 +144,61 @@ const ToastItem: React.FC<{ toast: Toast; onRemove: (id: string) => void }> = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsExiting(true);
-      setTimeout(() => onRemove(toast.id), 200);
+      setTimeout(() => onRemove(toast.id), 300);
     }, toast.duration || 3000);
 
     return () => clearTimeout(timer);
   }, [toast, onRemove]);
 
-  const bgColor = {
-    success: "border-green-500/30 bg-green-500/10",
-    error: "border-red-500/30 bg-red-500/10",
-    warning: "border-yellow-500/30 bg-yellow-500/10",
-    info: "border-blue-500/30 bg-blue-500/10",
+  const styles = {
+    success: {
+      border: "border-green-500/40",
+      bg: "bg-green-500/10",
+      glow: "shadow-green-500/20",
+    },
+    error: {
+      border: "border-red-500/40",
+      bg: "bg-red-500/10",
+      glow: "shadow-red-500/20",
+    },
+    warning: {
+      border: "border-yellow-500/40",
+      bg: "bg-yellow-500/10",
+      glow: "shadow-yellow-500/20",
+    },
+    info: {
+      border: "border-blue-500/40",
+      bg: "bg-blue-500/10",
+      glow: "shadow-blue-500/20",
+    },
   }[toast.type];
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 bg-prussian-blue border ${bgColor} rounded-lg shadow-lg min-w-[250px] max-w-[400px] transition-all duration-200 ${
-        isExiting ? "opacity-0 translate-x-4" : "opacity-100 translate-x-0"
+      className={`flex items-center gap-3 px-5 py-4 bg-prussian-blue/95 backdrop-blur-xl border ${styles.border} ${styles.bg} rounded-2xl shadow-xl ${styles.glow} min-w-[280px] max-w-[420px] transition-all duration-300 ${
+        isExiting
+          ? "opacity-0 translate-x-8 scale-95"
+          : "opacity-100 translate-x-0 scale-100 animate-slide-in"
       }`}
+      style={{ boxShadow: `0 10px 40px -10px rgba(0, 0, 0, 0.4)` }}
     >
-      <ToastIcon type={toast.type} />
-      <span className="text-sm text-alabaster-grey flex-1">
+      <div className="flex-shrink-0">
+        <ToastIcon type={toast.type} />
+      </div>
+      <span className="text-sm text-alabaster-grey flex-1 font-medium">
         {toast.message}
       </span>
       <button
         onClick={() => {
           setIsExiting(true);
-          setTimeout(() => onRemove(toast.id), 200);
+          setTimeout(() => onRemove(toast.id), 300);
         }}
-        className="text-lavender-grey/50 hover:text-lavender-grey transition-colors"
+        className="flex-shrink-0 text-lavender-grey/40 hover:text-lavender-grey transition-colors p-1 hover:bg-dusk-blue/20 rounded-lg"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="14"
-          height="14"
+          width="16"
+          height="16"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

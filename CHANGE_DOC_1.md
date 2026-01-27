@@ -965,6 +965,142 @@ const paletteCommands: CommandItem[] = React.useMemo(() => [
 
 ---
 
+## 9. UI Modernization (Phase 2.5)
+
+This section documents the comprehensive UI modernization performed to achieve a polished, modern look across all components.
+
+### 9.1 Global CSS Enhancements
+
+**File:** `src/index.css`
+
+#### New CSS Classes
+
+| Class | Purpose |
+|-------|---------|
+| `.glass` | Glass morphism effect with backdrop blur |
+| `.glow-blue` | Blue glow shadow effect |
+| `.glow-green` | Green glow shadow effect |
+| `.gradient-dark` | Dark gradient background |
+| `.btn-primary` | Primary button styling |
+| `.btn-ghost` | Ghost button styling |
+| `.badge` | Badge styling |
+
+#### New Animations
+
+```css
+@keyframes fade-in { /* Fade in from transparent */ }
+@keyframes slide-in { /* Slide in from bottom */ }
+@keyframes pulse-glow { /* Pulsing glow effect */ }
+@keyframes shimmer { /* Shimmer loading effect */ }
+```
+
+#### Custom Scrollbar
+
+- Transparent background with semi-transparent thumb
+- Hover state with increased opacity
+- Rounded corners
+
+### 9.2 Component-by-Component Changes
+
+#### CommandPalette.tsx
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Backdrop | `bg-black/50` | `bg-black/60 backdrop-blur-sm` |
+| Container | `rounded-lg` | `rounded-2xl` with glow shadow |
+| Search Input | Plain input | Input with search icon prefix |
+| Empty State | Plain text | Styled with emoji and help text |
+| Animation | None | `animate-fade-in` on open |
+| Keyboard Hints | Plain text | Styled `<kbd>` elements |
+
+#### Toast.tsx
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Background | Solid | `backdrop-blur-xl` |
+| Size | Small padding | Larger padding (4) |
+| Animation | `slideIn` | `animate-slide-in` + exit scale |
+| Shadow | Basic | Type-specific glow shadows |
+| Close Button | Small | Larger with rounded hover state |
+
+#### Breadcrumb.tsx
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| File Colors | All same | Color-coded by extension (TS=blue, JS=yellow, Rust=orange, etc.) |
+| Background | Solid | `gradient-dark` class |
+| Segment Hover | Basic | Rounded with background |
+| Chevrons | `16px` | `14px` |
+| Ellipsis | Basic | Styled with background |
+
+#### MenuBar.tsx
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Logo | Text only | Gradient square with "P" icon |
+| Background | Solid | Gradient background |
+| Dropdown | Basic | `backdrop-blur-xl` + rounded corners |
+| Menu Items | Plain | Rounded hover states |
+| Shortcuts | Plain text | Styled `<kbd>` elements |
+| New Feature | N/A | Search button with icon |
+
+#### Editor.tsx
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Empty State | Simple message | Full welcome screen with icon and action cards |
+| Loading State | Plain text | Spinner animation |
+| Tab Header | Basic | File type icons with colors, gradient background |
+| Ghost Indicator | Basic | Pill-shaped with spinner + backdrop blur |
+| Status Bar | Basic | "Copilot" label, dividers, badge-style language, pulse animation on modified |
+
+#### FileExplorer.tsx
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| File Icons | All same color | Color-coded by extension |
+| Folder Icons | Chevron only | Chevron + folder icon (filled when open) |
+| Item Hover | Basic | Rounded + gradient on active |
+| Context Menu | Basic | `backdrop-blur-xl`, icons for actions, rounded corners |
+| Tree Lines | Solid border | Subtle border with reduced opacity |
+
+#### AIChatSidebar.tsx
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Header | Plain text | Gradient icon + "Copilot" branding |
+| Background | Solid | Gradient from prussian-blue to ink-black |
+| Messages | Basic rounded | Rounded-2xl with backdrop blur + gradient for user messages |
+| Mode Indicator | Small badge | Styled pill with icon |
+| Mode Menu | Basic dropdown | `backdrop-blur-xl` + checkmark on selected |
+| Input | Basic | Rounded-xl with glow focus ring |
+| Send Button | Icon only | Gradient button with hover scale |
+| Footer Hints | Plain text | Styled `<kbd>` elements |
+
+#### main.tsx (Sidebar)
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Background | Solid | Gradient background |
+| Header | Plain | Folder icon + chevron collapse button |
+| Loading | Plain text | Spinner animation |
+| Resizer | Visible | Transparent with hover highlight |
+
+### 9.3 Design System Consistency
+
+All components now follow these design principles:
+
+1. **Rounded Corners:** `rounded-lg` to `rounded-2xl` for containers
+2. **Backdrop Blur:** `backdrop-blur-sm` to `backdrop-blur-xl` for overlays
+3. **Gradients:** Consistent gradient directions (top-to-bottom, left-to-right)
+4. **Animations:** Smooth 200ms transitions, fade-in/slide-in animations
+5. **Color Coding:** File types have consistent colors across components
+6. **Keyboard Hints:** Styled `<kbd>` elements with consistent styling
+7. **Hover States:** Rounded backgrounds with opacity changes
+8. **Focus States:** Ring effects with brand colors
+
+---
+
 ## Appendix: Component Hierarchy
 
 ```

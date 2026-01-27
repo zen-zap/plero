@@ -288,30 +288,57 @@ const AppContent: React.FC = () => {
         {isSidebarVisible && (
           <>
             <aside
-              className="h-full bg-prussian-blue flex flex-col border-r border-ink-black"
+              className="h-full bg-gradient-to-b from-prussian-blue to-prussian-blue/95 flex flex-col border-r border-dusk-blue/20"
               style={{ width: `${sidebarWidth}px` }}
             >
-              <header className="px-4 py-3 mb-2 flex items-center justify-between">
-                <h1 className="text-xs font-bold text-lavender-grey uppercase tracking-wider">
-                  Explorer
-                </h1>
+              <header className="px-4 py-3 flex items-center justify-between border-b border-dusk-blue/20">
+                <div className="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="text-dusk-blue"
+                  >
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <h1 className="text-xs font-semibold text-lavender-grey uppercase tracking-wider">
+                    Explorer
+                  </h1>
+                </div>
 
                 {/* Collapse Button: hides the sidebar */}
                 <button
-                  title="Close sidebar"
+                  title="Close sidebar (Ctrl+B)"
                   onClick={() => setIsSidebarVisible(false)}
-                  className="text-lavender-grey hover:text-alabaster-grey px-2 py-1 rounded"
+                  className="text-lavender-grey/50 hover:text-lavender-grey hover:bg-dusk-blue/20 p-1.5 rounded-lg transition-all"
                 >
-                  ✕
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
                 </button>
               </header>
-              <div className="flex-grow overflow-y-auto custom-scrollbar">
+              <div className="flex-grow overflow-y-auto custom-scrollbar px-1 py-2">
                 {error && (
-                  <div className="text-red-400 p-2 text-sm">{error}</div>
+                  <div className="text-red-400 p-3 text-sm bg-red-400/10 rounded-lg mx-2 border border-red-400/20">
+                    {error}
+                  </div>
                 )}
                 {!tree && !error && (
-                  <div className="text-lavender-grey p-4 text-sm text-center">
-                    Loading...
+                  <div className="flex flex-col items-center justify-center py-8 text-lavender-grey/50">
+                    <div className="w-6 h-6 border-2 border-dusk-blue/30 border-t-dusk-blue rounded-full animate-spin mb-3" />
+                    <span className="text-sm">Loading files...</span>
                   </div>
                 )}
                 {tree && (
@@ -330,7 +357,7 @@ const AppContent: React.FC = () => {
 
             {/* Resizable divider */}
             <div
-              className="w-1 h-full bg-ink-black hover:bg-dusk-blue cursor-col-resize transition-colors duration-150"
+              className="w-1 h-full bg-transparent hover:bg-dusk-blue/50 cursor-col-resize transition-colors duration-200"
               onMouseDown={startResizing}
               style={{
                 userSelect: "none",
@@ -361,7 +388,7 @@ const AppContent: React.FC = () => {
           <>
             {/* Resizer for Chat Sidebar */}
             <div
-              className="w-1 h-full bg-ink-black hover:bg-dusk-blue cursor-col-resize transition-colors duration-150"
+              className="w-1 h-full bg-transparent hover:bg-dusk-blue/50 cursor-col-resize transition-colors duration-200"
               onMouseDown={startResizingChat}
               style={{
                 userSelect: "none",

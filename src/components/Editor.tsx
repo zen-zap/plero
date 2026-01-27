@@ -348,21 +348,135 @@ export const Editor: React.FC<EditorProps> = ({
   }, [activeFile, ghostCompletionSource, isGhostActive, wordWrap]);
 
   if (isLoading)
-    return <div className="p-4 text-lavender-grey">Loading file...</div>;
+    return (
+      <div className="flex items-center justify-center h-full bg-ink-black">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-dusk-blue/30 border-t-dusk-blue rounded-full animate-spin" />
+          <span className="text-lavender-grey/60 text-sm">Loading file...</span>
+        </div>
+      </div>
+    );
   if (!activeFile)
     return (
-      <div className="flex flex-col items-center justify-center h-full text-lavender-grey bg-ink-black">
-        <div className="text-6xl mb-4 opacity-20">📝</div>
-        <div className="mb-2 text-lg">No file open</div>
-        <div className="text-sm text-dusk-blue mb-4">
-          Select a file from the explorer or use keyboard shortcuts
+      <div className="flex flex-col items-center justify-center h-full text-lavender-grey bg-gradient-to-b from-ink-black to-prussian-blue/20">
+        <div className="relative mb-8">
+          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-dusk-blue/20 to-lavender-grey/10 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-dusk-blue"
+            >
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <line x1="10" y1="9" x2="8" y2="9" />
+            </svg>
+          </div>
+          <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-dusk-blue/30 flex items-center justify-center">
+            <span className="text-lg">✨</span>
+          </div>
         </div>
-        <div className="flex gap-4 text-xs text-lavender-grey/60">
-          <span className="px-2 py-1 bg-ink-black/50 rounded">Ctrl+N New</span>
-          <span className="px-2 py-1 bg-ink-black/50 rounded">Ctrl+O Open</span>
-          <span className="px-2 py-1 bg-ink-black/50 rounded">
-            Ctrl+Shift+P Commands
-          </span>
+        <h2 className="text-xl font-semibold text-alabaster-grey mb-2">
+          Welcome to Plero
+        </h2>
+        <p className="text-sm text-lavender-grey/60 mb-8 max-w-xs text-center">
+          A modern code editor with AI-powered completions
+        </p>
+        <div className="flex flex-col gap-3">
+          <div
+            className="flex items-center gap-3 px-4 py-3 bg-prussian-blue/50 rounded-xl border border-dusk-blue/20 hover:bg-prussian-blue/70 cursor-pointer transition-all group"
+            onClick={onNew}
+          >
+            <div className="w-8 h-8 rounded-lg bg-dusk-blue/20 flex items-center justify-center group-hover:bg-dusk-blue/30">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-dusk-blue"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-alabaster-grey">New File</div>
+              <div className="text-xs text-lavender-grey/50">
+                Create a new file
+              </div>
+            </div>
+            <kbd className="text-[10px] text-lavender-grey/40 font-mono bg-ink-black/40 px-2 py-1 rounded">
+              Ctrl+N
+            </kbd>
+          </div>
+          <div
+            className="flex items-center gap-3 px-4 py-3 bg-prussian-blue/50 rounded-xl border border-dusk-blue/20 hover:bg-prussian-blue/70 cursor-pointer transition-all group"
+            onClick={onOpen}
+          >
+            <div className="w-8 h-8 rounded-lg bg-dusk-blue/20 flex items-center justify-center group-hover:bg-dusk-blue/30">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-dusk-blue"
+              >
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-alabaster-grey">Open File</div>
+              <div className="text-xs text-lavender-grey/50">
+                Browse your files
+              </div>
+            </div>
+            <kbd className="text-[10px] text-lavender-grey/40 font-mono bg-ink-black/40 px-2 py-1 rounded">
+              Ctrl+O
+            </kbd>
+          </div>
+          <div
+            className="flex items-center gap-3 px-4 py-3 bg-prussian-blue/50 rounded-xl border border-dusk-blue/20 hover:bg-prussian-blue/70 cursor-pointer transition-all group"
+            onClick={() => onShowToast?.("Press Ctrl+Shift+P", "info")}
+          >
+            <div className="w-8 h-8 rounded-lg bg-dusk-blue/20 flex items-center justify-center group-hover:bg-dusk-blue/30">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-dusk-blue"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-alabaster-grey">Command Palette</div>
+              <div className="text-xs text-lavender-grey/50">
+                Quick access to commands
+              </div>
+            </div>
+            <kbd className="text-[10px] text-lavender-grey/40 font-mono bg-ink-black/40 px-2 py-1 rounded">
+              Ctrl+Shift+P
+            </kbd>
+          </div>
         </div>
       </div>
     );
@@ -370,25 +484,56 @@ export const Editor: React.FC<EditorProps> = ({
   return (
     <div className="flex flex-col h-full bg-ink-black">
       {/* Tab Header with border */}
-      <header className="bg-prussian-blue flex items-center overflow-x-auto min-h-[40px] flex-shrink-0 border-b border-dusk-blue/30">
+      <header className="bg-gradient-to-r from-prussian-blue to-prussian-blue/80 flex items-center overflow-x-auto min-h-[42px] flex-shrink-0 border-b border-dusk-blue/20">
         <div className="flex min-w-fit">
           {openTabs && openTabs.length > 0 ? (
             openTabs.map((tab, index) => {
               const isActive = activeFile.path === tab.path;
+              const getTabIcon = () => {
+                const ext = tab.name.split(".").pop();
+                const colors: Record<string, string> = {
+                  ts: "text-blue-400",
+                  tsx: "text-blue-400",
+                  js: "text-yellow-400",
+                  jsx: "text-yellow-400",
+                  rs: "text-orange-400",
+                  py: "text-green-400",
+                  css: "text-pink-400",
+                  html: "text-red-400",
+                  json: "text-yellow-300",
+                  md: "text-lavender-grey",
+                };
+                return colors[ext || ""] || "text-dusk-blue";
+              };
               return (
                 <div
                   key={tab.path}
                   onClick={() => onSelectTab?.(tab)}
-                  className={`flex items-center space-x-2 px-4 py-2 text-sm cursor-pointer select-none whitespace-nowrap min-w-[120px] max-w-[200px] border-r border-dusk-blue/20 transition-colors duration-150 ${
+                  className={`group flex items-center gap-2 px-4 py-2.5 text-sm cursor-pointer select-none whitespace-nowrap min-w-[130px] max-w-[220px] transition-all duration-200 ${
                     isActive
-                      ? "bg-ink-black text-alabaster-grey border-t-2 border-t-blue-500"
-                      : "text-lavender-grey hover:bg-dusk-blue/20 border-t-2 border-t-transparent"
+                      ? "bg-ink-black text-alabaster-grey border-t-2 border-t-dusk-blue shadow-inner"
+                      : "text-lavender-grey/70 hover:text-lavender-grey hover:bg-dusk-blue/10 border-t-2 border-t-transparent"
                   }`}
                 >
-                  <span className="truncate flex-1">{tab.name}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className={`flex-shrink-0 ${getTabIcon()}`}
+                  >
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                  <span className="truncate flex-1 font-medium">
+                    {tab.name}
+                  </span>
                   {isDirty && isActive && (
                     <span
-                      className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"
+                      className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0 animate-pulse"
                       title="Unsaved changes"
                     />
                   )}
@@ -397,16 +542,27 @@ export const Editor: React.FC<EditorProps> = ({
                       e.stopPropagation();
                       onCloseTab?.(tab.path);
                     }}
-                    className="ml-1 text-lavender-grey/50 hover:text-red-400 cursor-pointer flex-shrink-0 text-xs"
+                    className="opacity-0 group-hover:opacity-100 text-lavender-grey/40 hover:text-red-400 cursor-pointer flex-shrink-0 p-0.5 hover:bg-red-400/10 rounded transition-all"
                     title="Close tab"
                   >
-                    ✕
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
                   </span>
                 </div>
               );
             })
           ) : (
-            <div className="px-4 py-2 text-lavender-grey/50 italic">
+            <div className="px-4 py-2 text-lavender-grey/40 italic text-sm">
               No open tabs
             </div>
           )}
@@ -420,9 +576,11 @@ export const Editor: React.FC<EditorProps> = ({
       <div className="flex-grow overflow-hidden relative text-[14px]">
         {/* Ghost loading indicator */}
         {isGhostLoading && (
-          <div className="absolute top-2 right-2 z-10 flex items-center gap-2 px-2 py-1 bg-ink-black/80 rounded text-xs text-dusk-blue">
-            <span className="w-2 h-2 bg-dusk-blue rounded-full animate-pulse" />
-            AI thinking...
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-2 px-3 py-2 bg-prussian-blue/95 backdrop-blur-sm rounded-xl border border-dusk-blue/30 shadow-lg animate-fade-in">
+            <div className="w-3 h-3 border-2 border-dusk-blue/30 border-t-dusk-blue rounded-full animate-spin" />
+            <span className="text-xs text-lavender-grey font-medium">
+              AI completing...
+            </span>
           </div>
         )}
         <CodeMirror
@@ -446,8 +604,8 @@ export const Editor: React.FC<EditorProps> = ({
       </div>
 
       {/* Status Bar */}
-      <footer className="bg-prussian-blue border-t border-dusk-blue/30 px-3 py-1 flex items-center justify-between text-xs text-lavender-grey flex-shrink-0">
-        <div className="flex items-center gap-3">
+      <footer className="bg-gradient-to-r from-prussian-blue via-prussian-blue to-ink-black border-t border-dusk-blue/20 px-4 py-1.5 flex items-center justify-between text-xs text-lavender-grey flex-shrink-0">
+        <div className="flex items-center gap-2">
           {/* Ghost Completion Status */}
           <button
             onClick={() => {
@@ -459,9 +617,9 @@ export const Editor: React.FC<EditorProps> = ({
                 "info",
               );
             }}
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded transition-colors ${
+            className={`flex items-center gap-2 px-2.5 py-1 rounded-lg transition-all ${
               isGhostActive
-                ? "text-green-400 hover:bg-green-400/10"
+                ? "text-green-400 bg-green-400/10 hover:bg-green-400/20"
                 : "text-lavender-grey/50 hover:bg-dusk-blue/20"
             }`}
             title={
@@ -471,25 +629,27 @@ export const Editor: React.FC<EditorProps> = ({
             }
           >
             <span
-              className={`w-2 h-2 rounded-full ${isGhostActive ? "bg-green-400" : "bg-lavender-grey/30"}`}
+              className={`w-2 h-2 rounded-full ${isGhostActive ? "bg-green-400 shadow-sm shadow-green-400/50" : "bg-lavender-grey/30"}`}
             />
-            <span>AI</span>
+            <span className="font-medium">Copilot</span>
           </button>
+
+          <div className="w-px h-4 bg-dusk-blue/30" />
 
           {/* Word Wrap Toggle */}
           <button
             onClick={() => setWordWrap(!wordWrap)}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
               wordWrap
-                ? "text-dusk-blue hover:bg-dusk-blue/10"
+                ? "text-dusk-blue bg-dusk-blue/10"
                 : "text-lavender-grey/50 hover:bg-dusk-blue/20"
             }`}
             title={wordWrap ? "Word Wrap On" : "Word Wrap Off"}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="12"
-              height="12"
+              width="14"
+              height="14"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -501,28 +661,35 @@ export const Editor: React.FC<EditorProps> = ({
               <path d="M3 12h15a3 3 0 1 1 0 6h-4" />
               <polyline points="13 16 16 19 13 22" />
             </svg>
+            <span>Wrap</span>
           </button>
 
           {/* Dirty indicator */}
           {isDirty && (
-            <span className="text-yellow-400/80 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-              Modified
-            </span>
+            <>
+              <div className="w-px h-4 bg-dusk-blue/30" />
+              <span className="flex items-center gap-1.5 text-yellow-400 bg-yellow-400/10 px-2.5 py-1 rounded-lg">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                <span className="font-medium">Modified</span>
+              </span>
+            </>
           )}
 
           {/* Selection info */}
           {selectionInfo.chars > 0 && (
-            <span className="text-lavender-grey/60">
-              {selectionInfo.chars} chars, {selectionInfo.lines} lines selected
-            </span>
+            <>
+              <div className="w-px h-4 bg-dusk-blue/30" />
+              <span className="text-lavender-grey/70 bg-ink-black/40 px-2.5 py-1 rounded-lg">
+                {selectionInfo.chars} chars · {selectionInfo.lines} lines
+              </span>
+            </>
           )}
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Language */}
+        <div className="flex items-center gap-3">
+          {/* Language Badge */}
           {activeFile && (
-            <span className="text-lavender-grey/70">
+            <span className="px-2.5 py-1 rounded-lg bg-dusk-blue/10 text-dusk-blue font-medium">
               {activeFile.path.endsWith(".ts") ||
               activeFile.path.endsWith(".tsx")
                 ? "TypeScript"
@@ -546,12 +713,16 @@ export const Editor: React.FC<EditorProps> = ({
           )}
 
           {/* Cursor Position */}
-          <span className="text-lavender-grey/70">
+          <span className="text-lavender-grey/60 font-mono text-[11px]">
             Ln {cursorPosition.line}, Col {cursorPosition.col}
           </span>
 
+          <div className="w-px h-4 bg-dusk-blue/30" />
+
           {/* Encoding */}
-          <span className="text-lavender-grey/50">UTF-8</span>
+          <span className="text-lavender-grey/40 font-mono text-[11px]">
+            UTF-8
+          </span>
         </div>
       </footer>
     </div>

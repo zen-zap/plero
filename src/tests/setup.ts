@@ -6,6 +6,9 @@
 import { vi, beforeAll, afterAll, afterEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 
+// Mock scrollIntoView for jsdom
+Element.prototype.scrollIntoView = vi.fn();
+
 // Mock window.electronAPI for renderer tests
 const mockElectronAPI = {
   // File operations
