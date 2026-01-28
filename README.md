@@ -1,5 +1,3 @@
-THIS IS THE UNREVIEWED BRANCH. I GOT FED UP AND CLAUDE IMPROVE THE UI A LOT.
-
 # plero
 
 Code-editor with AI code-completion using **OPENAI** API.
@@ -9,7 +7,8 @@ Yes, you may find a lot of the parts written by AI.
 I'm not a web developer. Any code from AI has been reviewed and iterated upon by me.
 
 ## How it Looks: (in Arch -- hyprland compositor)
-<img width="1920" height="1058" alt="image" src="https://github.com/user-attachments/assets/27193d6f-3136-4c14-a041-709abcf4327c" />
+<img width="1914" height="1055" alt="image" src="https://github.com/user-attachments/assets/9e2b04c5-01cc-4063-b052-0d25b0e56752" />
+
 
 
 Appearance may vary depending on window manager, compositor, and theme.
@@ -27,6 +26,6 @@ The services are paid and I can't afford to provide any as a student.
 
 ## Contributions:
 
-I won't be going much further with this project once I'm done with the basic working features.
+I won't be going much further with this project once I'm done with the basic working features. I started this with the intention to learn web dev and agentic AI.
 If you want to work on something or have any feature you wanna integrate, feel free to reach out to me.
 PRs are welcome.
