@@ -27,6 +27,9 @@ export type GhostCompletionOptions = {
  * We usually pass a few lines before the cursor as prefix and a few
  * lines after the cursor as suffix.
  * We probably need to call this function from the editor?
+ *
+ * TODO: Needs more refining, and support for other languages.
+ * TODO: Improve usage of codex-mini. It doesn't work well.
  */
 export async function ghostCompletion({
   prefix,
@@ -157,6 +160,7 @@ ${safeSuffix}
 }
 
 // miniature router for rust
+// have to improve this router
 function shouldUseStructuralModel(prefix: string, language: string) {
   const p = prefix.trim();
 
@@ -185,6 +189,8 @@ function shouldUseStructuralModel(prefix: string, language: string) {
   return false;
 }
 
+
+// TODO: Shift to langgraph, this is temporary for checking UI functionality
 export type ChatOptions = {
   query: string;
   mode?: "chat" | "reasoning" | "web" | "auto";
@@ -317,7 +323,7 @@ export async function webChat({
 }): Promise<string> {
   console.log("[AI] webChat - searching web...");
 
-  // Import tavily dynamically to avoid circular deps
+  // Import tavily dynamically to avoid circular deps -- this is nice!
   const { tavilySearch } = await import("./tavily");
 
   try {
@@ -378,29 +384,24 @@ export async function ragChat({
 }): Promise<string> {
   console.log("[AI] ragChat - building context from file...");
 
-  // Import RAG utilities
+  // Import RAG utilities -- lazy -- 
   const { chunkByLines, embed, embedChunks } = await import("./rag");
 
   try {
-    // Chunk the file content
     const chunks = chunkByLines(fileContent, 30);
 
     if (chunks.length === 0) {
       return chat({ query, mode: "chat" });
     }
 
-    // Embed the query
     const queryEmbedding = await embed(query);
-
-    // Embed chunks
     const chunkEmbeddings = await embedChunks(chunks);
 
-    // Calculate cosine similarity and find most relevant chunks
     const similarities = chunkEmbeddings.map((chunkEmb) => {
       return cosineSimilarity(queryEmbedding, chunkEmb);
     });
 
-    // Get top 3 most similar chunks
+    // top 3 most similar chunks
     const topIndices = similarities
       .map((sim, idx) => ({ sim, idx }))
       .sort((a, b) => b.sim - a.sim)
@@ -416,7 +417,6 @@ export async function ragChat({
 
     console.log("[AI] ragChat - found relevant chunks:", topIndices);
 
-    // Chat with the relevant context
     return chat({
       query,
       mode: "chat",
@@ -425,7 +425,7 @@ export async function ragChat({
     });
   } catch (err) {
     console.error("[AI] ragChat error:", err);
-    // Fallback: just pass the whole file as context (truncated)
+    // passing the whole file as context in case of an error
     const truncatedContent = fileContent.slice(0, 4000);
     return chat({
       query,
@@ -435,7 +435,6 @@ export async function ragChat({
   }
 }
 
-// Helper: cosine similarity between two vectors
 function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length) return 0;
 

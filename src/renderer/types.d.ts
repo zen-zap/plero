@@ -7,7 +7,7 @@ export type ApiResponse<T> = {
   error?: string;
 };
 
-// File stat result type
+// File stat result type -- need documentation here
 export type FileStat = {
   size: number;
   mtime: Date;

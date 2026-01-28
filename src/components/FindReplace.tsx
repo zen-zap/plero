@@ -236,3 +236,5 @@ export const FindReplace: React.FC<FindReplaceProps> = ({
     </div>
   );
 };
+
+// Where is the logic for finding the matches??

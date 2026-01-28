@@ -159,10 +159,10 @@ export const Editor: React.FC<EditorProps> = ({
                 completion.length > 50
                   ? completion.slice(0, 50) + "..."
                   : completion,
-              detail: "✨ AI",
+              detail: "AI",
               type: "text",
               apply: result.data,
-              boost: 99, // Prioritize AI completion
+              boost: 99, // Prioritize AI completion -- how does this work?
             },
           ],
         };

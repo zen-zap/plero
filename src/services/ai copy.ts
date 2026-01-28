@@ -1,4 +1,6 @@
-// in src/services/ai.ts
+// in src/services/ai copy.ts
+//
+// This file is for reference only. Not to be used henceforth. Will make all this in Langgraph
 import "dotenv/config";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;

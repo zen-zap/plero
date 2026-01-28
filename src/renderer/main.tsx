@@ -405,7 +405,7 @@ const AppContent: React.FC = () => {
         )}
       </div>
 
-      {/* Command Palette */}
+      {/* Command Palette -- same level as the menu bar? */}
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
@@ -415,6 +415,8 @@ const AppContent: React.FC = () => {
   );
 };
 
+// TODO: add explanation about the levels here
+// what is toast provider tho? what is a toast anyways?
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
@@ -431,4 +433,5 @@ const container = document.getElementById("root")!;
 if (!(window as any).__appRoot) {
   (window as any).__appRoot = ReactDOM.createRoot(container);
 }
+
 (window as any).__appRoot.render(<App />);

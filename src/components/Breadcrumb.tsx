@@ -50,7 +50,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ path, onNavigate }) => {
         <polyline points="14 2 14 8 20 8" />
       </svg>
 
-      {/* Ellipsis for hidden segments */}
+      {/* Ellipsis for hidden segments -- nice */}
       {hasHiddenSegments && (
         <>
           <span className="text-lavender-grey/40 px-1">•••</span>
@@ -86,6 +86,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ path, onNavigate }) => {
   );
 };
 
+// the forward arrow shaped icon
 const ChevronIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

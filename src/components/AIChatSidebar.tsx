@@ -129,6 +129,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // we go to bottom when there is a new message from me or the ai
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -147,6 +148,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // okay this is async -- good to have but what can this race with if not?
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -434,7 +436,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
             )}
           </div>
 
-          {/* Context Toggle */}
+          {/* Context Toggle -- aight nice! */}
           <button
             onClick={() => setUseContext(!useContext)}
             title={

@@ -48,6 +48,9 @@ prisma/dev.db-journal
 # Misc
 *.local
 *.cache
+
+# Personal documentation (not for upstream)
+react.md
 .cache/
 tmp/
 temp/

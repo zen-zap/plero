@@ -1,4 +1,6 @@
 // src/components/FileExplorer.tsx
+//
+// Need to improve UI here -- no urgency
 
 import React, { useState } from "react";
 
