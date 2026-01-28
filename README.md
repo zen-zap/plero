@@ -30,6 +30,3 @@ The services are paid and I can't afford to provide any as a student.
 I won't be going much further with this project once I'm done with the basic working features.
 If you want to work on something or have any feature you wanna integrate, feel free to reach out to me.
 PRs are welcome.
-
-
-- You can ignore the DOCUMENTATION.md and IMRPOVEMENTS.md file. They were made for personal reference.

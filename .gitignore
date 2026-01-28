@@ -84,3 +84,6 @@ logs/
 
 # Optional: Ignore generated files from your build tools or frameworks
 generated/
+
+DOCUMENTATION.md
+IMPROVEMENTS.md
