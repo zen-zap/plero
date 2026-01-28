@@ -4,9 +4,9 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { Editor } from "./Editor";
-import { ActionsProvider } from "../renderer/contexts/ActionsContext";
-import type { TreeNode } from "./FileExplorer";
+import { Editor } from "../../components/Editor";
+import { ActionsProvider } from "../../renderer/contexts/ActionsContext";
+import type { TreeNode } from "../../components/FileExplorer";
 
 // Helper to render Editor with ActionsProvider
 const renderEditor = (props: Partial<Parameters<typeof Editor>[0]> = {}) => {
@@ -37,18 +37,16 @@ describe("Editor", () => {
   });
 
   describe("when no file is active", () => {
-    it("should show 'No file open' message", () => {
+    it("should show welcome message", () => {
       renderEditor({ activeFile: null });
 
-      expect(screen.getByText("No file open")).toBeInTheDocument();
-      expect(
-        screen.getByText("Select a file from the explorer"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Welcome to Plero")).toBeInTheDocument();
+      expect(screen.getByText(/A modern code editor/i)).toBeInTheDocument();
     });
   });
 
   describe("when loading", () => {
-    it("should show loading message", () => {
+    it("should show loading indicator", () => {
       const file: TreeNode = { name: "test.ts", type: "file", path: "test.ts" };
 
       renderEditor({ activeFile: file, isLoading: true });
@@ -67,7 +65,9 @@ describe("Editor", () => {
         openTabs: [file],
       });
 
-      expect(screen.getByText("test.ts")).toBeInTheDocument();
+      // The filename appears in tab and breadcrumb, so use getAllByText
+      const elements = screen.getAllByText("test.ts");
+      expect(elements.length).toBeGreaterThan(0);
     });
 
     it("should display multiple tabs", () => {
@@ -88,8 +88,11 @@ describe("Editor", () => {
         openTabs: [file1, file2],
       });
 
-      expect(screen.getByText("file1.ts")).toBeInTheDocument();
-      expect(screen.getByText("file2.ts")).toBeInTheDocument();
+      // Files appear in tabs and potentially breadcrumb
+      const file1Elements = screen.getAllByText("file1.ts");
+      const file2Elements = screen.getAllByText("file2.ts");
+      expect(file1Elements.length).toBeGreaterThan(0);
+      expect(file2Elements.length).toBeGreaterThan(0);
     });
 
     it("should call onSelectTab when clicking a tab", () => {
@@ -112,7 +115,10 @@ describe("Editor", () => {
         onSelectTab,
       });
 
-      fireEvent.click(screen.getByText("file2.ts"));
+      // Find the second file tab and click it
+      const file2Elements = screen.getAllByText("file2.ts");
+      // Click the first occurrence (should be the tab)
+      fireEvent.click(file2Elements[0]);
 
       expect(onSelectTab).toHaveBeenCalledWith(file2);
     });

@@ -4,12 +4,8 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useFileSystem } from "./useFileSystem";
-import {
-  mockElectronAPI,
-  mockApiResponse,
-  mockApiFailure,
-} from "../../tests/setup";
+import { useFileSystem } from "../../renderer/hooks/useFileSystem";
+import { mockElectronAPI, mockApiResponse, mockApiFailure } from "../setup";
 import type { TreeNode } from "../../components/FileExplorer";
 
 describe("useFileSystem", () => {
