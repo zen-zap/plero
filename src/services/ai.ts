@@ -189,8 +189,78 @@ function shouldUseStructuralModel(prefix: string, language: string) {
   return false;
 }
 
+import { graphChat, invokeGraph, ChatMode } from "./agent/graph";
 
-// TODO: Shift to langgraph, this is temporary for checking UI functionality
+/**
+ * Chat using the LangGraph multi-agent system.
+ * Routes through supervisor in auto mode or directly to the selected node.
+ * Supports full conversation history for multi-turn conversations.
+ */
+export async function graphBasedChat({
+  query,
+  mode = "auto",
+  context,
+  history,
+}: {
+  query: string;
+  mode?: ChatMode;
+  context?: string;
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
+}): Promise<{ response: string; usedMode: string }> {
+  console.log("\n" + "-".repeat(70));
+  console.log("[AI Service] graphBasedChat START");
+  console.log("[AI Service] mode:", mode);
+  console.log("[AI Service] hasContext:", !!context);
+  console.log("[AI Service] historyLength:", history?.length || 0);
+  console.log("[AI Service] query:", query?.slice(0, 100));
+  console.log("-".repeat(70));
+
+  try {
+    // Build messages array with history
+    const messages: Array<{
+      role: "user" | "assistant" | "system";
+      content: string;
+    }> = [];
+
+    // Add context as system message if provided
+    if (context) {
+      messages.push({
+        role: "system",
+        content: `Context from the codebase:\n${context}`,
+      });
+    }
+
+    // Add conversation history
+    if (history && history.length > 0) {
+      console.log("[AI Service] Adding", history.length, "history messages");
+      for (const msg of history) {
+        messages.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      }
+    }
+
+    // Add current query
+    messages.push({ role: "user", content: query });
+
+    console.log("[AI Service] Total messages for graph:", messages.length);
+    console.log("[AI Service] Calling invokeGraph...");
+
+    const result = await invokeGraph(messages, mode as ChatMode);
+
+    console.log("[AI Service] graphBasedChat COMPLETE");
+    console.log("[AI Service] usedMode:", result.usedMode);
+    console.log("[AI Service] responseLength:", result.response?.length);
+    console.log("-".repeat(70) + "\n");
+
+    return result;
+  } catch (err) {
+    console.error("[AI Service] graphBasedChat ERROR:", err);
+    throw err;
+  }
+}
+
 export type ChatOptions = {
   query: string;
   mode?: "chat" | "reasoning" | "web" | "auto";
@@ -257,7 +327,7 @@ export async function chat({
 }
 
 /**
- * Auto mode: Classifies the query and routes to the appropriate handler
+ * Auto mode: Uses LangGraph supervisor to route to the appropriate handler
  */
 export async function autoChat({
   query,
@@ -266,49 +336,58 @@ export async function autoChat({
   query: string;
   context?: string;
 }): Promise<{ response: string; mode: string }> {
-  console.log("[AI] autoChat - classifying query...");
+  console.log("[AI] autoChat - routing via LangGraph supervisor...");
 
-  // Simple classification based on keywords
-  const queryLower = query.toLowerCase();
+  try {
+    const result = await graphBasedChat({ query, mode: "auto", context });
+    return { response: result.response, mode: result.usedMode };
+  } catch (err) {
+    console.error(
+      "[AI] autoChat graph error, falling back to keyword routing:",
+      err,
+    );
+    // Fallback to simple keyword-based routing
+    const queryLower = query.toLowerCase();
 
-  let detectedMode: "chat" | "reasoning" | "web" = "chat";
+    let detectedMode: "chat" | "reasoning" | "web" = "chat";
 
-  // Check for web search indicators
-  if (
-    queryLower.includes("search") ||
-    queryLower.includes("latest") ||
-    queryLower.includes("current") ||
-    queryLower.includes("news") ||
-    queryLower.includes("what is") ||
-    queryLower.includes("who is") ||
-    queryLower.includes("find online") ||
-    queryLower.includes("look up")
-  ) {
-    detectedMode = "web";
+    // Check for web search indicators
+    if (
+      queryLower.includes("search") ||
+      queryLower.includes("latest") ||
+      queryLower.includes("current") ||
+      queryLower.includes("news") ||
+      queryLower.includes("what is") ||
+      queryLower.includes("who is") ||
+      queryLower.includes("find online") ||
+      queryLower.includes("look up")
+    ) {
+      detectedMode = "web";
+    }
+    // Check for reasoning indicators
+    else if (
+      queryLower.includes("explain") ||
+      queryLower.includes("why") ||
+      queryLower.includes("how does") ||
+      queryLower.includes("step by step") ||
+      queryLower.includes("analyze") ||
+      queryLower.includes("compare") ||
+      queryLower.includes("debug") ||
+      queryLower.includes("think through")
+    ) {
+      detectedMode = "reasoning";
+    }
+
+    console.log("[AI] autoChat fallback - detected mode:", detectedMode);
+
+    if (detectedMode === "web") {
+      const response = await webChat({ query, context });
+      return { response, mode: "web" };
+    }
+
+    const response = await chat({ query, mode: detectedMode, context });
+    return { response, mode: detectedMode };
   }
-  // Check for reasoning indicators
-  else if (
-    queryLower.includes("explain") ||
-    queryLower.includes("why") ||
-    queryLower.includes("how does") ||
-    queryLower.includes("step by step") ||
-    queryLower.includes("analyze") ||
-    queryLower.includes("compare") ||
-    queryLower.includes("debug") ||
-    queryLower.includes("think through")
-  ) {
-    detectedMode = "reasoning";
-  }
-
-  console.log("[AI] autoChat - detected mode:", detectedMode);
-
-  if (detectedMode === "web") {
-    const response = await webChat({ query, context });
-    return { response, mode: "web" };
-  }
-
-  const response = await chat({ query, mode: detectedMode, context });
-  return { response, mode: detectedMode };
 }
 
 /**
@@ -384,7 +463,7 @@ export async function ragChat({
 }): Promise<string> {
   console.log("[AI] ragChat - building context from file...");
 
-  // Import RAG utilities -- lazy -- 
+  // Import RAG utilities -- lazy --
   const { chunkByLines, embed, embedChunks } = await import("./rag");
 
   try {

@@ -42,6 +42,7 @@ export type ChatOptions = {
   mode?: "chat" | "reasoning" | "web" | "auto";
   context?: string;
   model?: string;
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
 };
 
 // AI RAG chat options

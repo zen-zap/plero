@@ -23,43 +23,40 @@ ipcMain.handle("ai:ghost", async (_event, args) => {
 });
 
 ipcMain.handle("ai:chat", async (_event, args) => {
-  console.log("[IPC][ai:chat] request:", {
-    mode: args.mode,
-    hasContext: !!args.context,
-  });
+  console.log("\n" + "=".repeat(70));
+  console.log("[IPC][ai:chat] REQUEST RECEIVED");
+  console.log("[IPC][ai:chat] mode:", args.mode);
+  console.log("[IPC][ai:chat] hasContext:", !!args.context);
+  console.log("[IPC][ai:chat] hasHistory:", !!args.history);
+  console.log("[IPC][ai:chat] historyLength:", args.history?.length || 0);
+  console.log(
+    "[IPC][ai:chat] query (first 100 chars):",
+    args.query?.slice(0, 100),
+  );
+  console.log("=".repeat(70));
+
   try {
-    const mode = args.mode || "chat";
+    const mode = args.mode || "auto";
     let result: string;
     let usedMode = mode;
 
-    switch (mode) {
-      case "auto": {
-        const autoResult = await aiService.autoChat({
-          query: args.query,
-          context: args.context,
-        });
-        result = autoResult.response;
-        usedMode = autoResult.mode;
-        break;
-      }
-      case "web": {
-        result = await aiService.webChat({
-          query: args.query,
-          context: args.context,
-        });
-        break;
-      }
-      case "reasoning":
-      case "chat":
-      default: {
-        result = await aiService.chat({
-          query: args.query,
-          mode: mode,
-          context: args.context,
-        });
-        break;
-      }
-    }
+    // Use graph-based chat with full history support
+    const { graphBasedChat } = await import("../services/ai");
+
+    console.log("[IPC][ai:chat] Calling graphBasedChat with mode:", mode);
+
+    const graphResult = await graphBasedChat({
+      query: args.query,
+      mode: mode,
+      context: args.context,
+      history: args.history, // Pass conversation history
+    });
+
+    result = graphResult.response;
+    usedMode = graphResult.usedMode;
+
+    console.log("[IPC][ai:chat] Graph returned, usedMode:", usedMode);
+    console.log("[IPC][ai:chat] Response length:", result?.length);
 
     return {
       ok: true,
@@ -67,7 +64,7 @@ ipcMain.handle("ai:chat", async (_event, args) => {
       mode: usedMode,
     };
   } catch (err) {
-    console.error("[IPC][ai:chat] error:", err);
+    console.error("[IPC][ai:chat] ERROR:", err);
     return {
       ok: false,
       error: err instanceof Error ? err.message : String(err),

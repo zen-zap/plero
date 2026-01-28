@@ -49,6 +49,10 @@ prisma/dev.db-journal
 *.local
 *.cache
 
+# Project-specific docs (not for version control)
+langgraph.md
+rag.md
+
 # Personal documentation (not for upstream)
 react.md
 .cache/
@@ -90,3 +94,5 @@ IMPROVEMENTS.md
 CHANGE_DOC_1.md
 changes.md
 TEST_SETUP.md
+# LangGraph API
+.langgraph_api

@@ -1,8 +1,8 @@
 {
-  "node_version": "25",
+  "node_version": "22",
   "dependencies": ["."],
   "graphs": {
-    "plero_agent": "./src/agent/graph.ts:graph"
+    "plero_agent": "./src/services/agent/graph.ts:graph"
   },
   "env": ".env"
 }

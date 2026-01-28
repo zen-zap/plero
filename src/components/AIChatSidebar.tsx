@@ -153,12 +153,22 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput("");
     setIsLoading(true);
 
     try {
       let response;
+
+      // Build conversation history (excluding the welcome message)
+      const history = updatedMessages
+        .filter((m, i) => i > 0) // Skip the initial welcome message
+        .slice(-20) // Keep last 20 messages for context
+        .map((m) => ({
+          role: m.role,
+          content: m.content,
+        }));
 
       // If context is enabled and we have file content, use RAG
       if (useContext && activeFileContent) {
@@ -171,6 +181,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
         response = await window.electronAPI.aiChat({
           query: userMessage.content,
           mode: mode,
+          history: history, // Send conversation history
           context:
             useContext && activeFileContent
               ? activeFileContent.slice(0, 2000)
