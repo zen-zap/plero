@@ -40,7 +40,6 @@ ipcMain.handle("ai:chat", async (_event, args) => {
     let result: string;
     let usedMode = mode;
 
-    // Use graph-based chat with full history support
     const { graphBasedChat } = await import("../services/ai");
 
     console.log("[IPC][ai:chat] Calling graphBasedChat with mode:", mode);
@@ -49,7 +48,7 @@ ipcMain.handle("ai:chat", async (_event, args) => {
       query: args.query,
       mode: mode,
       context: args.context,
-      history: args.history, // Pass conversation history
+      history: args.history, 
     });
 
     result = graphResult.response;
@@ -75,12 +74,14 @@ ipcMain.handle("ai:chat", async (_event, args) => {
 ipcMain.handle("ai:ragChat", async (_event, args) => {
   console.log("[IPC][ai:ragChat] request:", {
     hasFileContent: !!args.fileContent,
+    contextMode: args.contextMode,
   });
   try {
     const result = await aiService.ragChat({
       query: args.query,
       fileContent: args.fileContent,
       filePath: args.filePath,
+      contextMode: args.contextMode || "file",
     });
     return {
       ok: true,
@@ -88,6 +89,23 @@ ipcMain.handle("ai:ragChat", async (_event, args) => {
     };
   } catch (err) {
     console.error("[IPC][ai:ragChat] error:", err);
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+});
+
+ipcMain.handle("ai:indexCodebase", async () => {
+  console.log("[IPC][ai:indexCodebase] Starting codebase indexing...");
+  try {
+    const result = await aiService.indexEntireCodebase();
+    return {
+      ok: true,
+      data: result,
+    };
+  } catch (err) {
+    console.error("[IPC][ai:indexCodebase] error:", err);
     return {
       ok: false,
       error: err instanceof Error ? err.message : String(err),

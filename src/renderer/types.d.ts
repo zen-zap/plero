@@ -48,8 +48,16 @@ export type ChatOptions = {
 // AI RAG chat options
 export type RagChatOptions = {
   query: string;
-  fileContent: string;
+  fileContent?: string;
   filePath?: string;
+  contextMode?: "file" | "codebase";
+};
+
+// Index codebase result
+export type IndexCodebaseResult = {
+  indexed: number;
+  skipped: number;
+  errors: string[];
 };
 
 // AI chat response
@@ -124,6 +132,7 @@ declare global {
         options: ChatOptions,
       ) => Promise<ApiResponse<string> & { mode?: string }>;
       aiRagChat: (options: RagChatOptions) => Promise<ApiResponse<string>>;
+      indexCodebase: () => Promise<ApiResponse<IndexCodebaseResult>>;
       aiClassify: (options: ClassifyOptions) => Promise<ApiResponse<number>>;
       aiCompletionRag: (
         options: RagCompletionOptions,

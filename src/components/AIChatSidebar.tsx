@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
 export type ChatMode = "auto" | "chat" | "reasoning" | "web";
+export type ContextMode = "none" | "file" | "codebase";
 
 interface Message {
   role: "user" | "assistant";
@@ -103,6 +104,18 @@ const modeDescriptions: Record<ChatMode, string> = {
   web: "Search the web for answers",
 };
 
+const contextModeLabels: Record<ContextMode, string> = {
+  none: "No Context",
+  file: "Current File",
+  codebase: "Codebase",
+};
+
+const contextModeDescriptions: Record<ContextMode, string> = {
+  none: "Chat without code context",
+  file: "Use the currently open file",
+  codebase: "Search across all project files",
+};
+
 export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
   width,
   onClose,
@@ -119,11 +132,15 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<ChatMode>("auto");
-  const [useContext, setUseContext] = useState(false);
+  const [contextMode, setContextMode] = useState<ContextMode>("none");
   const [showModeMenu, setShowModeMenu] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [isIndexing, setIsIndexing] = useState(false);
+  const [indexProgress, setIndexProgress] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const modeMenuRef = useRef<HTMLDivElement>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -143,15 +160,22 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
       ) {
         setShowModeMenu(false);
       }
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowContextMenu(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // okay this is async -- good to have but what can this race with if not?
-  const handleSend = async () => {
+  const handleSend = async (forceContext?: ContextMode) => {
     if (!input.trim() || isLoading) return;
 
+    const effectiveContextMode = forceContext ?? contextMode;
     const userMessage: Message = { role: "user", content: input };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
@@ -170,22 +194,27 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
           content: m.content,
         }));
 
-      // If context is enabled and we have file content, use RAG
-      if (useContext && activeFileContent) {
+      // Handle different context modes
+      if (effectiveContextMode === "file" && activeFileContent) {
+        // Use current file as context via RAG
         response = await window.electronAPI.aiRagChat({
           query: userMessage.content,
           fileContent: activeFileContent,
           filePath: activeFilePath,
+          contextMode: "file",
+        });
+      } else if (effectiveContextMode === "codebase") {
+        // Search across entire codebase using HNSW
+        response = await window.electronAPI.aiRagChat({
+          query: userMessage.content,
+          contextMode: "codebase",
         });
       } else {
+        // No context - use standard chat through graph
         response = await window.electronAPI.aiChat({
           query: userMessage.content,
           mode: mode,
-          history: history, // Send conversation history
-          context:
-            useContext && activeFileContent
-              ? activeFileContent.slice(0, 2000)
-              : undefined,
+          history: history,
         });
       }
 
@@ -224,9 +253,41 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Ctrl+Enter: Send with current file context
+    if (e.key === "Enter" && e.ctrlKey && !e.shiftKey) {
+      e.preventDefault();
+      handleSend("file");
+      return;
+    }
+    // Ctrl+Shift+Enter: Send with codebase context
+    if (e.key === "Enter" && e.ctrlKey && e.shiftKey) {
+      e.preventDefault();
+      handleSend("codebase");
+      return;
+    }
+    // Regular Enter: Send with selected context mode
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  // Index the entire codebase for context search
+  const handleIndexCodebase = async () => {
+    setIsIndexing(true);
+    setIndexProgress("Starting codebase indexing...");
+    try {
+      const result = await window.electronAPI.indexCodebase?.();
+      if (result?.ok && result.data) {
+        setIndexProgress(`Indexed ${result.data.indexed} files`);
+        setTimeout(() => setIndexProgress(""), 3000);
+      } else {
+        setIndexProgress(`Error: ${result?.error || "Unknown error"}`);
+      }
+    } catch (e) {
+      setIndexProgress(`Error: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setIsIndexing(false);
     }
   };
 
@@ -447,41 +508,137 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
             )}
           </div>
 
-          {/* Context Toggle -- aight nice! */}
-          <button
-            onClick={() => setUseContext(!useContext)}
-            title={
-              useContext
-                ? "Context enabled - using current file"
-                : "Enable context from current file"
-            }
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-200 border ${
-              useContext
-                ? "text-dusk-blue border-dusk-blue/50 bg-dusk-blue/20 shadow-lg shadow-dusk-blue/20"
-                : "text-lavender-grey border-dusk-blue/30 hover:text-alabaster-grey hover:bg-dusk-blue/20"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {/* Context Mode Selector */}
+          <div className="relative" ref={contextMenuRef}>
+            <button
+              onClick={() => setShowContextMenu(!showContextMenu)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-200 border ${
+                contextMode !== "none"
+                  ? "text-dusk-blue border-dusk-blue/50 bg-dusk-blue/20 shadow-lg shadow-dusk-blue/20"
+                  : "text-lavender-grey border-dusk-blue/30 hover:text-alabaster-grey hover:bg-dusk-blue/20"
+              }`}
             >
-              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-              <polyline points="14 2 14 8 20 8" />
-            </svg>
-            <span className="font-medium">Context</span>
-            {useContext && activeFilePath && (
-              <span className="text-[10px] text-dusk-blue/80 max-w-[60px] truncate bg-dusk-blue/10 px-1.5 py-0.5 rounded">
-                {activeFilePath.split("/").pop()}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {contextMode === "codebase" ? (
+                  <>
+                    <path d="M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18" />
+                  </>
+                ) : (
+                  <>
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </>
+                )}
+              </svg>
+              <span className="font-medium">
+                {contextModeLabels[contextMode]}
               </span>
+              {contextMode === "file" && activeFilePath && (
+                <span className="text-[10px] text-dusk-blue/80 max-w-[60px] truncate bg-dusk-blue/10 px-1.5 py-0.5 rounded">
+                  {activeFilePath.split("/").pop()}
+                </span>
+              )}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`transition-transform duration-200 ${showContextMenu ? "rotate-180" : ""}`}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {showContextMenu && (
+              <div className="absolute bottom-full left-0 mb-2 bg-ink-black/95 backdrop-blur-xl border border-dusk-blue/30 rounded-xl shadow-2xl py-2 min-w-[200px] z-10 animate-fade-in">
+                {(["none", "file", "codebase"] as ContextMode[]).map((cm) => (
+                  <button
+                    key={cm}
+                    onClick={() => {
+                      setContextMode(cm);
+                      setShowContextMenu(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-2 text-xs text-left hover:bg-dusk-blue/20 transition-all duration-200 ${
+                      contextMode === cm
+                        ? "text-dusk-blue bg-dusk-blue/10"
+                        : "text-alabaster-grey"
+                    }`}
+                  >
+                    <div>
+                      <div className="font-medium">{contextModeLabels[cm]}</div>
+                      <div className="text-[10px] text-lavender-grey/70">
+                        {contextModeDescriptions[cm]}
+                      </div>
+                    </div>
+                    {contextMode === cm && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="ml-auto text-dusk-blue"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+                <div className="border-t border-dusk-blue/20 mt-2 pt-2 px-4">
+                  <button
+                    onClick={handleIndexCodebase}
+                    disabled={isIndexing}
+                    className="w-full flex items-center gap-2 py-2 text-xs text-lavender-grey hover:text-dusk-blue transition-all duration-200 disabled:opacity-50"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={isIndexing ? "animate-spin" : ""}
+                    >
+                      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                      <path d="M3 3v5h5" />
+                      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                      <path d="M16 21h5v-5" />
+                    </svg>
+                    <span>
+                      {isIndexing ? "Indexing..." : "Re-index codebase"}
+                    </span>
+                  </button>
+                  {indexProgress && (
+                    <div className="text-[10px] text-dusk-blue/70 mt-1">
+                      {indexProgress}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
-          </button>
+          </div>
         </div>
 
         {/* Text Input */}
@@ -492,7 +649,9 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={
-              useContext ? "Ask about your code..." : "Ask anything..."
+              contextMode !== "none"
+                ? "Ask about your code..."
+                : "Ask anything..."
             }
             className="w-full bg-ink-black/80 text-alabaster-grey text-sm rounded-xl border border-dusk-blue/30 focus:border-dusk-blue focus:ring-2 focus:ring-dusk-blue/20 focus:outline-none p-4 pr-12 resize-none custom-scrollbar transition-all duration-200 placeholder:text-lavender-grey/50"
             style={{
@@ -507,7 +666,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
             }}
           />
           <button
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={!input.trim() || isLoading}
             className={`absolute right-3 bottom-3 p-2 rounded-lg transition-all duration-200 ${
               !input.trim() || isLoading
@@ -533,17 +692,21 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
         </div>
 
         {/* Footer hint */}
-        <div className="text-[10px] text-lavender-grey/50 text-center flex items-center justify-center gap-2">
-          <span>Press</span>
+        <div className="text-[10px] text-lavender-grey/50 text-center flex flex-wrap items-center justify-center gap-1.5">
           <kbd className="px-1.5 py-0.5 rounded bg-ink-black/50 border border-dusk-blue/20 text-lavender-grey/70 font-mono text-[9px]">
             Enter
           </kbd>
-          <span>to send</span>
+          <span>send</span>
           <span className="text-dusk-blue/30">•</span>
           <kbd className="px-1.5 py-0.5 rounded bg-ink-black/50 border border-dusk-blue/20 text-lavender-grey/70 font-mono text-[9px]">
-            Shift+Enter
+            Ctrl+Enter
           </kbd>
-          <span>for new line</span>
+          <span>+ file</span>
+          <span className="text-dusk-blue/30">•</span>
+          <kbd className="px-1.5 py-0.5 rounded bg-ink-black/50 border border-dusk-blue/20 text-lavender-grey/70 font-mono text-[9px]">
+            Ctrl+Shift+Enter
+          </kbd>
+          <span>+ codebase</span>
         </div>
       </div>
     </aside>

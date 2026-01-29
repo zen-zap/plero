@@ -51,10 +51,6 @@ const AppContent: React.FC = () => {
       setIsSidebarVisible((prev) => !prev);
     });
 
-    const unsubToggleChat = register("toggle-chat", () => {
-      setIsChatVisible((prev) => !prev);
-    });
-
     const unsubToggleAiChat = register("toggle-ai-chat", () => {
       setIsChatVisible((prev) => !prev);
     });
@@ -95,7 +91,6 @@ const AppContent: React.FC = () => {
 
     return () => {
       unsubToggleSidebar();
-      unsubToggleChat();
       unsubToggleAiChat();
       unsubCommandPalette();
       unsubExit();

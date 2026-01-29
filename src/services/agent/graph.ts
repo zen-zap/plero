@@ -39,7 +39,9 @@ const chatModel = "gpt-5-mini";
  * Extracts string content from a message (handles both BaseMessage and plain objects).
  */
 function getMessageContent(message: any): string {
-  // If message is a string itself, return it
+  
+  // here, we're checking for different possible response types
+  // TODO: needs verification of output type and cleaning up
   if (typeof message === "string") {
     return message;
   }

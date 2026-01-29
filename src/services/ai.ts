@@ -450,67 +450,148 @@ export async function webChat({
 }
 
 /**
- * RAG-enhanced chat: retrieves relevant context from the file
+ * RAG-enhanced chat: retrieves relevant context from file or codebase
+ * Routes through LangGraph for consistent response handling
  */
 export async function ragChat({
   query,
   fileContent,
   filePath,
+  contextMode = "file",
 }: {
   query: string;
-  fileContent: string;
+  fileContent?: string;
   filePath?: string;
+  contextMode?: "file" | "codebase";
 }): Promise<string> {
-  console.log("[AI] ragChat - building context from file...");
+  console.log("[AI] ragChat - contextMode:", contextMode);
 
-  // Import RAG utilities -- lazy --
-  const { chunkByLines, embed, embedChunks } = await import("./rag");
+  // Import RAG utilities
+  const {
+    chunkByLines,
+    embed,
+    embedChunks,
+    searchRelevantChunks,
+    indexFileToHNSW,
+    initHNSW,
+  } = await import("./rag");
 
   try {
-    const chunks = chunkByLines(fileContent, 30);
+    let relevantContext = "";
 
-    if (chunks.length === 0) {
-      return chat({ query, mode: "chat" });
+    if (contextMode === "codebase") {
+      // Search across entire codebase using HNSW
+      console.log("[AI] ragChat - searching codebase with HNSW...");
+      await initHNSW();
+
+      const results = await searchRelevantChunks(query, 5);
+
+      if (results.length === 0) {
+        console.log("[AI] ragChat - no relevant chunks found in codebase");
+        // Fall through to graph-based chat without context
+      } else {
+        relevantContext = results
+          .map(
+            (r, i) =>
+              `// From ${r.filePath} (relevance: ${(r.score * 100).toFixed(1)}%):\n${r.text}`,
+          )
+          .join("\n\n");
+        console.log(
+          "[AI] ragChat - found",
+          results.length,
+          "relevant chunks from codebase",
+        );
+      }
+    } else if (contextMode === "file" && fileContent) {
+      // Index current file and search within it
+      console.log("[AI] ragChat - searching within current file...");
+
+      // Index the file if provided
+      if (filePath) {
+        await indexFileToHNSW(filePath, fileContent);
+      }
+
+      const chunks = chunkByLines(fileContent, 30);
+
+      if (chunks.length > 0) {
+        const queryEmbedding = await embed(query);
+        const chunkEmbeddings = await embedChunks(chunks);
+
+        const similarities = chunkEmbeddings.map((chunkEmb) => {
+          return cosineSimilarity(queryEmbedding, chunkEmb);
+        });
+
+        // top 3 most similar chunks
+        const topIndices = similarities
+          .map((sim, idx) => ({ sim, idx }))
+          .sort((a, b) => b.sim - a.sim)
+          .slice(0, 3)
+          .map((item) => item.idx);
+
+        relevantContext = topIndices
+          .map(
+            (idx) =>
+              `// Lines ${idx * 30 + 1}-${(idx + 1) * 30}:\n${chunks[idx]}`,
+          )
+          .join("\n\n");
+        console.log(
+          "[AI] ragChat - found relevant chunks at indices:",
+          topIndices,
+        );
+      }
     }
 
-    const queryEmbedding = await embed(query);
-    const chunkEmbeddings = await embedChunks(chunks);
-
-    const similarities = chunkEmbeddings.map((chunkEmb) => {
-      return cosineSimilarity(queryEmbedding, chunkEmb);
-    });
-
-    // top 3 most similar chunks
-    const topIndices = similarities
-      .map((sim, idx) => ({ sim, idx }))
-      .sort((a, b) => b.sim - a.sim)
-      .slice(0, 3)
-      .map((item) => item.idx);
-
-    const relevantContext = topIndices
-      .map(
-        (idx) =>
-          `// Chunk ${idx + 1} (lines ${idx * 30 + 1}-${(idx + 1) * 30}):\n${chunks[idx]}`,
-      )
-      .join("\n\n");
-
-    console.log("[AI] ragChat - found relevant chunks:", topIndices);
-
-    return chat({
+    // Route through LangGraph with context
+    console.log("[AI] ragChat - routing through LangGraph...");
+    const result = await graphBasedChat({
       query,
-      mode: "chat",
-      context: relevantContext,
-      systemPrompt: `You are a helpful AI coding assistant analyzing code${filePath ? ` from ${filePath}` : ""}. Use the provided code context to give accurate, specific answers. Format your responses using markdown.`,
+      mode: "auto", // Let supervisor decide best handling
+      context: relevantContext || undefined,
     });
+
+    return result.response;
   } catch (err) {
     console.error("[AI] ragChat error:", err);
-    // passing the whole file as context in case of an error
-    const truncatedContent = fileContent.slice(0, 4000);
+    // Fallback: pass truncated file content or just query
+    const fallbackContext = fileContent
+      ? fileContent.slice(0, 4000)
+      : undefined;
     return chat({
       query,
       mode: "chat",
-      context: truncatedContent,
+      context: fallbackContext,
     });
+  }
+}
+
+/**
+ * Index the entire codebase into HNSW for semantic search
+ */
+export async function indexEntireCodebase(): Promise<{
+  indexed: number;
+  skipped: number;
+  errors: string[];
+}> {
+  console.log("[AI] indexEntireCodebase - starting...");
+
+  const { indexCodebase, initHNSW } = await import("./rag");
+  const { getTree, getFileContent } = await import("./file");
+
+  try {
+    // Initialize HNSW
+    await initHNSW();
+
+    // Get the workspace tree
+    const tree = getTree();
+
+    // Index all files
+    const result = await indexCodebase(tree, getFileContent);
+
+    console.log("[AI] indexEntireCodebase - complete:", result);
+    return result;
+  } catch (err) {
+    console.error("[AI] indexEntireCodebase error:", err);
+    throw err;
   }
 }
 

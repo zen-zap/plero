@@ -49,6 +49,9 @@ prisma/dev.db-journal
 *.local
 *.cache
 
+# Plero cache directory (embeddings, HNSW index, etc.)
+.plero/
+
 # Project-specific docs (not for version control)
 langgraph.md
 rag.md
