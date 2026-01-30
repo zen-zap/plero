@@ -23,7 +23,15 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: |
+          # Use npm ci when a lockfile is present for reproducible installs; otherwise fall back to npm install
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] || [ -f yarn.lock ]; then
+            echo "Lockfile found — running npm ci with legacy peer deps"
+            npm ci --legacy-peer-deps
+          else
+            echo "No lockfile found — running npm install with legacy peer deps"
+            npm install --legacy-peer-deps
+          fi
 
       - name: Build frontend and main
         run: npm run build:frontend
