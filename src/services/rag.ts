@@ -36,7 +36,7 @@ if (fs.existsSync(CACHE_FILE)) {
   try {
     embeddingCache = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
   } catch (error) {
-    console.error("Error reading cache file:", error);
+    // console.error("Error reading cache file:", error);
   }
 }
 
@@ -46,7 +46,7 @@ if (fs.existsSync(HASH_CACHE_FILE)) {
   try {
     hashCache = JSON.parse(fs.readFileSync(HASH_CACHE_FILE, "utf-8"));
   } catch (error) {
-    console.error("Error reading hash cache file:", error);
+    // console.error("Error reading hash cache file:", error);
   }
 }
 
@@ -158,7 +158,7 @@ export async function reEmbedChangedChunks(
 
   // If there are no cached embeddings yet, embed and cache all chunks
   if (!cachedEmbeddings || cachedEmbeddings.length === 0) {
-    console.log("[RAG] No cached embeddings found, embedding all chunks.");
+    // console.log("[RAG] No cached embeddings found, embedding all chunks.");
     const embeddings = await embedChunks(chunks);
     await cacheEmbeddings(filePath, embeddings);
     hashCache[filePath] = newHashes;
@@ -168,7 +168,7 @@ export async function reEmbedChangedChunks(
 
   // If chunk count changed significantly, re-embed all
   if (Math.abs(cachedEmbeddings.length - chunks.length) > chunks.length * 0.3) {
-    console.log("[RAG] Chunk count changed significantly, re-embedding all.");
+    // console.log("[RAG] Chunk count changed significantly, re-embedding all.");
     const embeddings = await embedChunks(chunks);
     await cacheEmbeddings(filePath, embeddings);
     hashCache[filePath] = newHashes;
@@ -185,13 +185,13 @@ export async function reEmbedChangedChunks(
   }
 
   if (changedIndices.length === 0) {
-    console.log("[RAG] No chunks changed, using cached embeddings.");
+    // console.log("[RAG] No chunks changed, using cached embeddings.");
     return cachedEmbeddings.slice(0, chunks.length); // Handle length mismatch
   }
 
-  console.log(
-    `[RAG] Re-embedding ${changedIndices.length}/${chunks.length} changed chunks.`,
-  );
+  // console.log(
+  //   `[RAG] Re-embedding ${changedIndices.length}/${chunks.length} changed chunks.`,
+  // );
 
   // Re-embed only changed chunks
   const changedChunks = changedIndices.map((i) => chunks[i]);
@@ -228,7 +228,7 @@ export async function indexFileToHNSW(
   filePath: string,
   content: string,
 ): Promise<void> {
-  console.log(`[RAG] Indexing file to HNSW: ${filePath}`);
+  // console.log(`[RAG] Indexing file to HNSW: ${filePath}`);
 
   // Ensure HNSW is initialized
   await initHNSW();
@@ -239,12 +239,12 @@ export async function indexFileToHNSW(
 
   // Check if file needs re-indexing
   if (!fileNeedsReindex(filePath, hashes)) {
-    console.log(`[RAG] File ${filePath} unchanged, skipping.`);
+    // console.log(`[RAG] File ${filePath} unchanged, skipping.`);
     return;
   }
 
   // Embed the chunks
-  console.log(`[RAG] Embedding ${chunks.length} chunks...`);
+  // console.log(`[RAG] Embedding ${chunks.length} chunks...`);
   const embeddings = await embedChunks(chunks);
 
   // Add to HNSW index
@@ -253,7 +253,7 @@ export async function indexFileToHNSW(
   // Persist to disk
   saveHNSW();
 
-  console.log(`[RAG] Successfully indexed ${filePath}`);
+  // console.log(`[RAG] Successfully indexed ${filePath}`);
 }
 
 /**
@@ -264,9 +264,9 @@ export async function searchRelevantChunks(
   k: number = 5,
   filterFilePath?: string,
 ): Promise<Array<{ text: string; filePath: string; score: number }>> {
-  console.log(
-    `[RAG] Searching for relevant chunks, k=${k}, filter=${filterFilePath || "none"}`,
-  );
+  // console.log(
+  //   `[RAG] Searching for relevant chunks, k=${k}, filter=${filterFilePath || "none"}`,
+  // );
 
   // Embed the query
   const queryEmbedding = await embed(query);
@@ -274,7 +274,7 @@ export async function searchRelevantChunks(
   // Search HNSW
   const results = await searchHNSW(queryEmbedding, k, filterFilePath);
 
-  console.log(`[RAG] Found ${results.length} relevant chunks`);
+  // console.log(`[RAG] Found ${results.length} relevant chunks`);
   return results;
 }
 
@@ -381,14 +381,14 @@ export async function indexCodebase(
   getFileContent: (path: string) => string,
   onProgress?: (progress: IndexProgress) => void,
 ): Promise<{ indexed: number; skipped: number; errors: string[] }> {
-  console.log("[RAG] Starting codebase indexing...");
+  // console.log("[RAG] Starting codebase indexing...");
 
   // Initialize HNSW
   await initHNSW();
 
   // Collect all code files
   const files = collectCodeFiles(tree);
-  console.log(`[RAG] Found ${files.length} code files to index`);
+  // console.log(`[RAG] Found ${files.length} code files to index`);
 
   let indexed = 0;
   let skipped = 0;
@@ -411,14 +411,14 @@ export async function indexCodebase(
 
       // Skip very large files (>500KB) or empty files
       if (!content || content.length === 0) {
-        console.log(`[RAG] Skipping empty file: ${filePath}`);
+        // console.log(`[RAG] Skipping empty file: ${filePath}`);
         skipped++;
         continue;
       }
       if (content.length > 500000) {
-        console.log(
-          `[RAG] Skipping large file (${content.length} bytes): ${filePath}`,
-        );
+        // console.log(
+        //   `[RAG] Skipping large file (${content.length} bytes): ${filePath}`,
+        // );
         skipped++;
         continue;
       }
@@ -427,7 +427,7 @@ export async function indexCodebase(
       indexed++;
     } catch (error) {
       const errorMsg = `Failed to index ${filePath}: ${error instanceof Error ? error.message : String(error)}`;
-      console.error(`[RAG] ${errorMsg}`);
+      // console.error(`[RAG] ${errorMsg}`);
       errors.push(errorMsg);
     }
   }
@@ -444,9 +444,9 @@ export async function indexCodebase(
     });
   }
 
-  console.log(
-    `[RAG] Codebase indexing complete: ${indexed} indexed, ${skipped} skipped, ${errors.length} errors`,
-  );
+  // console.log(
+  //   `[RAG] Codebase indexing complete: ${indexed} indexed, ${skipped} skipped, ${errors.length} errors`,
+  // );
   return { indexed, skipped, errors };
 }
 

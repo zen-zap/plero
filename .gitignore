@@ -99,3 +99,5 @@ changes.md
 TEST_SETUP.md
 # LangGraph API
 .langgraph_api
+
+release/

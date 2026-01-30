@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import "../index.css";
 import { FileExplorer } from "../components/FileExplorer";
@@ -15,6 +15,8 @@ const AppContent: React.FC = () => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(256); // 256px = w-64 in Tailwind
   const [isResizing, setIsResizing] = useState(false);
+
+  const [rootFolderName, setRootFolderName] = useState<string>("");
 
   const [isChatVisible, setIsChatVisible] = useState(true);
   const [chatWidth, setChatWidth] = useState(300);
@@ -37,18 +39,44 @@ const AppContent: React.FC = () => {
     saveFile,
     newFile,
     openFileDialog,
+    openFolderDialog,
     renameFile,
     deleteFile,
     createNewFile,
     createNewFolder,
     openTabs,
     closeTab,
+    isIndexingCodebase,
+    setIsIndexingCodebase,
   } = useFileSystem();
+
+  // to laod root name here
+  const loadRootName = useCallback(async () => {
+    try {
+      const result = await window.electronAPI.getRoot();
+      if (result.ok && result.data) {
+        // Extract just the folder name from the full path
+        const folderName = result.data.split("/").pop() || result.data;
+        setRootFolderName(folderName);
+      }
+    } catch (err) {
+      // console.error("Failed to get root:", err);
+    }
+  }, []);
+  // for the above root folder name loading
+  useEffect(() => {
+    loadRootName();
+  }, [loadRootName]);
 
   // Register sidebar toggle and other app-level commands
   React.useEffect(() => {
     const unsubToggleSidebar = register("toggle-sidebar", () => {
       setIsSidebarVisible((prev) => !prev);
+    });
+
+    const unsubOpenFolder = register("open-folder", async () => {
+      await openFolderDialog();
+      loadRootName();
     });
 
     const unsubToggleAiChat = register("toggle-ai-chat", () => {
@@ -87,10 +115,10 @@ const AppContent: React.FC = () => {
       );
     });
 
-    // Note: copy, cut, paste are handled by the browser/editor natively
-
+    // cleanups
     return () => {
       unsubToggleSidebar();
+      unsubOpenFolder();
       unsubToggleAiChat();
       unsubCommandPalette();
       unsubExit();
@@ -99,7 +127,7 @@ const AppContent: React.FC = () => {
       unsubAbout();
       unsubShowShortcuts();
     };
-  }, [register, showToast]);
+  }, [register, showToast, openFolderDialog, loadRootName]);
 
   // Global keyboard shortcuts
   React.useEffect(() => {
@@ -123,11 +151,21 @@ const AppContent: React.FC = () => {
       if (e.key === "Escape" && isCommandPaletteOpen) {
         setIsCommandPaletteOpen(false);
       }
+      // Ctrl+O: Open File Dialog
+      if (e.ctrlKey && !e.shiftKey && e.key === "o") {
+        e.preventDefault();
+        openFileDialog();
+      }
+      // Ctrl+Shift+O: Open Folder Dialog
+      if (e.ctrlKey && e.shiftKey && e.key === "O") {
+        e.preventDefault();
+        dispatch("open-folder");
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isCommandPaletteOpen]);
+  }, [isCommandPaletteOpen, dispatch, openFileDialog]);
 
   // Build command palette commands
   const paletteCommands: CommandItem[] = React.useMemo(
@@ -152,6 +190,13 @@ const AppContent: React.FC = () => {
         shortcut: "Ctrl+O",
         category: "File",
         action: () => dispatch("open"),
+      },
+      {
+        id: "open-folder",
+        label: "Open Folder",
+        shortcut: "Ctrl+Shift+O",
+        category: "File",
+        action: () => dispatch("open-folder"),
       },
       {
         id: "toggle-sidebar",
@@ -278,7 +323,10 @@ const AppContent: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-ink-black text-alabaster-grey font-sans overflow-hidden">
       {/* Note: MenuBar just dispatches 'save'. Editor hears it and calls saveFile. */}
-      <MenuBar />
+      <MenuBar
+        rootFolderName={rootFolderName}
+        isIndexing={isIndexingCodebase}
+      />
       <div className="flex flex-1 overflow-hidden">
         {isSidebarVisible && (
           <>
@@ -372,6 +420,7 @@ const AppContent: React.FC = () => {
             onSave={saveFile}
             onNew={newFile}
             onOpen={openFileDialog}
+            onOpenFolder={openFolderDialog}
             onSelectTab={selectFile}
             openTabs={openTabs}
             onCloseTab={closeTab}
@@ -395,6 +444,7 @@ const AppContent: React.FC = () => {
               onClose={() => setIsChatVisible(false)}
               activeFileContent={fileContent || undefined}
               activeFilePath={activeFile?.path}
+              onIndexingChange={setIsIndexingCodebase}
             />
           </>
         )}

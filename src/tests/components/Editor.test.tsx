@@ -19,6 +19,7 @@ const renderEditor = (props: Partial<Parameters<typeof Editor>[0]> = {}) => {
     onSave: vi.fn(),
     onNew: vi.fn(),
     onOpen: vi.fn(),
+    onOpenFolder: vi.fn(),
     openTabs: [],
     onSelectTab: vi.fn(),
     onCloseTab: vi.fn(),

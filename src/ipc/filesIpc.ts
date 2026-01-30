@@ -2,7 +2,6 @@ import { ipcMain } from "electron";
 import * as fileService from "../services/file";
 import { dialog } from "electron";
 
-// Helper for consistent error handling
 const handle =
   (fn: Function) =>
   async (_event: any, ...args: any[]) => {
@@ -12,7 +11,7 @@ const handle =
       //console.log(`[IPC] Success: ${fn.name} =>`, data);
       return { ok: true, data };
     } catch (error) {
-      console.error(`[IPC] Error in ${fn.name}:`, error);
+      // console.error(`[IPC] Error in ${fn.name}:`, error);
       return { ok: false, error: (error as Error).message ?? String(error) };
     }
   };
@@ -64,7 +63,6 @@ ipcMain.handle(
   ),
 );
 
-// File dialog for opening files
 ipcMain.handle("file:openDialog", async () => {
   try {
     const result = await dialog.showOpenDialog({
@@ -85,7 +83,33 @@ ipcMain.handle("file:openDialog", async () => {
     }
     return { ok: false, error: "No file selected" };
   } catch (error) {
-    console.error("[IPC] Error in file dialog:", error);
+    // console.error("[IPC] Error in file dialog:", error);
     return { ok: false, error: (error as Error).message ?? String(error) };
   }
 });
+
+// To open folders in the editor
+ipcMain.handle("file:openFolderDialog", async () => {
+  try {
+    const res = await dialog.showOpenDialog({
+      properties: ["openDirectory"],
+    });
+
+    if (!res.canceled && res.filePaths.length > 0) {
+      return { ok: true, data: res.filePaths[0] };
+    }
+    return { ok: false, error: "No folder selected" };
+  } catch (err) {
+    // console.error("[IPC] Error in folder dialog:", err);
+    return { ok: false, error: (err as Error).message ?? String(err) };
+  }
+});
+
+ipcMain.handle(
+  "file:setRoot",
+  handle((newRoot: string) => fileService.setRoot(newRoot)),
+);
+ipcMain.handle(
+  "file:getRoot",
+  handle(() => fileService.getCurrentRoot()),
+);

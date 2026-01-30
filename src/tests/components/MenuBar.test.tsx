@@ -34,9 +34,9 @@ describe("MenuBar", () => {
   });
 
   describe("rendering", () => {
-    it("should render the Plero logo", () => {
+    it("should render the Plero", () => {
       renderMenuBar();
-      expect(screen.getByText("P")).toBeInTheDocument();
+      expect(screen.getByText("Plero")).toBeInTheDocument();
     });
 
     it("should render all main menu items", () => {

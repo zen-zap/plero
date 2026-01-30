@@ -1,27 +1,24 @@
 import { OpenAI } from "openai/client.js";
+import dotenv from "dotenv";
+import path from "path";
+import os from "os";
+
+// Load API keys from ~/.plero_keys/.env
+dotenv.config({ path: path.join(os.homedir(), ".plero_keys", ".env") });
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 if (!OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY is not defined.");
 }
 
-import {
-  StateSchema,
-  MessagesValue,
-  GraphNode,
-  StateGraph,
-  START,
-  END,
-  Annotation,
-  ConditionalEdgeRouter,
-} from "@langchain/langgraph";
+import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 import {
   HumanMessage,
   SystemMessage,
   BaseMessage,
   AIMessage,
 } from "@langchain/core/messages";
-import { TavilySearch } from "@langchain/tavily";
+import { TavilySearchAPIWrapper } from "@langchain/tavily";
 
 const client = new OpenAI({
   apiKey: OPENAI_API_KEY,
@@ -30,16 +27,16 @@ const client = new OpenAI({
 });
 
 // separate models for separate tasks
-const supervisorModel = "gpt-4o";
-const bestModel = "gpt-5.2";
-const codeModel = "gpt-5.1-codex";
-const chatModel = "gpt-5-mini";
+// Note: gpt-5 models don't support 'temperature' parameter with tools
+const supervisorModel = "gpt-4o"; // Fast routing decisions
+const reasonerModel = "gpt-5.2"; // Deep reasoning and analysis
+const chatModel = "gpt-4o"; // Simple chat (supports temperature)
+const webSearchModel = "gpt-5-mini-2025-08-07"; // Web search with tools
 
 /**
  * Extracts string content from a message (handles both BaseMessage and plain objects).
  */
 function getMessageContent(message: any): string {
-  
   // here, we're checking for different possible response types
   // TODO: needs verification of output type and cleaning up
   if (typeof message === "string") {
@@ -107,21 +104,21 @@ function getMessageType(message: any): string {
 function toOpenAIMessages(
   messages: any[],
 ): Array<{ role: "user" | "assistant" | "system"; content: string }> {
-  console.log("[toOpenAIMessages] input messages count:", messages?.length);
-  console.log("[toOpenAIMessages] messages type:", typeof messages);
-  console.log("[toOpenAIMessages] is array:", Array.isArray(messages));
+  // console.log("[toOpenAIMessages] input messages count:", messages?.length);
+  // console.log("[toOpenAIMessages] messages type:", typeof messages);
+  // console.log("[toOpenAIMessages] is array:", Array.isArray(messages));
 
-  if (messages?.[0]) {
-    console.log("[toOpenAIMessages] first message type:", typeof messages[0]);
-    console.log(
-      "[toOpenAIMessages] first message constructor:",
-      messages[0]?.constructor?.name,
-    );
-    console.log(
-      "[toOpenAIMessages] first message full:",
-      JSON.stringify(messages[0], null, 2)?.slice(0, 1500),
-    );
-  }
+  // if (messages?.[0]) {
+  //   console.log("[toOpenAIMessages] first message type:", typeof messages[0]);
+  //   console.log(
+  //     "[toOpenAIMessages] first message constructor:",
+  //     messages[0]?.constructor?.name,
+  //   );
+  //   console.log(
+  //     "[toOpenAIMessages] first message full:",
+  //     JSON.stringify(messages[0], null, 2)?.slice(0, 1500),
+  //   );
+  // }
 
   const result: Array<{
     role: "user" | "assistant" | "system";
@@ -166,21 +163,20 @@ const ChatAgentState = Annotation.Root({
  * Logs the current state for debugging
  */
 function logState(nodeName: string, state: typeof ChatAgentState.State) {
-  console.log(`\n${"=".repeat(60)}`);
-  console.log(`[${nodeName.toUpperCase()}] Node entered`);
-  console.log(`[${nodeName}] state.next: "${state.next}"`);
-  console.log(`[${nodeName}] messages count: ${state.messages?.length}`);
-
-  if (state.messages?.length > 0) {
-    const lastMsg = state.messages[state.messages.length - 1];
-    const content = getMessageContent(lastMsg);
-    const msgType = getMessageType(lastMsg);
-    console.log(`[${nodeName}] last message type: "${msgType}"`);
-    console.log(
-      `[${nodeName}] last message content (first 200 chars): "${content?.slice(0, 200)}"`,
-    );
-  }
-  console.log(`${"=".repeat(60)}\n`);
+  // console.log(`\n${"=".repeat(60)}`);
+  // console.log(`[${nodeName.toUpperCase()}] Node entered`);
+  // console.log(`[${nodeName}] state.next: "${state.next}"`);
+  // console.log(`[${nodeName}] messages count: ${state.messages?.length}`);
+  // if (state.messages?.length > 0) {
+  //   const lastMsg = state.messages[state.messages.length - 1];
+  //   const content = getMessageContent(lastMsg);
+  //   const msgType = getMessageType(lastMsg);
+  //   console.log(`[${nodeName}] last message type: "${msgType}"`);
+  //   console.log(
+  //     `[${nodeName}] last message content (first 200 chars): "${content?.slice(0, 200)}"`,
+  //   );
+  // }
+  // console.log(`${"=".repeat(60)}\n`);
 }
 
 /**
@@ -220,14 +216,14 @@ Output ONLY the name of the worker: "web_search", "reasoner", or "chat".`;
   });
 
   const route = response?.output_text.trim().toLowerCase();
-  console.log(`[supervisor] LLM response: "${response?.output_text}"`);
-  console.log(`[supervisor] Parsed route: "${route}"`);
+  // console.log(`[supervisor] LLM response: "${response?.output_text}"`);
+  // console.log(`[supervisor] Parsed route: "${route}"`);
 
   if (["web_search", "reasoner", "chat"].includes(route)) {
-    console.log(`[supervisor] ✓ Valid route, going to: ${route}`);
+    // console.log(`[supervisor] ✓ Valid route, going to: ${route}`);
     return { next: route };
   } else {
-    console.log(`[supervisor] ✗ Invalid route, defaulting to: chat`);
+    // console.log(`[supervisor] ✗ Invalid route, defaulting to: chat`);
     return { next: "chat" };
   }
 }
@@ -238,24 +234,40 @@ async function chatNode(
   logState("chat", state);
 
   let inputMessages = toOpenAIMessages(state.messages);
-  console.log(`[chat] Converted ${inputMessages.length} messages for OpenAI`);
+  // console.log(`[chat] Converted ${inputMessages.length} messages for OpenAI`);
 
   // Ensure we always have at least one message
   if (inputMessages.length === 0) {
-    console.log(`[chat] ⚠ No messages found, using fallback`);
+    // console.log(`[chat] ⚠ No messages found, using fallback`);
     inputMessages = [
       { role: "user", content: "Hello, I didn't get any input ;)" },
     ];
   } else {
-    console.log(`[chat] First message: ${JSON.stringify(inputMessages[0])}`);
+    // console.log(`[chat] First message: ${JSON.stringify(inputMessages[0])}`);
   }
 
+  // gpt-4o supports temperature and has native web_search tool
   const response = await client.responses.create({
     model: chatModel,
     text: {
       format: { type: "text" },
     },
-    input: inputMessages,
+    temperature: 0.7,
+    input: [
+      {
+        role: "system",
+        content:
+          "You are a helpful AI assistant. You have access to web search - use it to fetch the latest information when the user asks about current events, weather, news, or anything that requires up-to-date data. Always prefer fetching real data over saying you don't have access.",
+      },
+      ...inputMessages,
+    ],
+    tools: [
+      {
+        type: "web_search",
+      },
+    ],
+    tool_choice: "auto",
+    max_output_tokens: 4000,
   });
 
   const aiMessage = new AIMessage(response.output_text);
@@ -270,34 +282,37 @@ async function reasonerNode(
 ): Promise<Partial<typeof ChatAgentState.State>> {
   logState("reasoner", state);
 
-  const sysPrompt = `You are a Senior Principal Software Architect.
-Produce a careful, step-by-step analysis, then a concise solution.
+  const sysPrompt = `You are a Senior Principal Software Engineer with deep expertise in software architecture, debugging, and code analysis.
+
+Your job is to think deeply and provide thorough, insightful analysis. Approach problems the way an experienced engineer would:
+- Understand the full context before jumping to conclusions
+- Consider edge cases, trade-offs, and implications
+- Explain your reasoning clearly so others can follow your thought process
+- When analyzing code or architecture, examine how components interact and why decisions were made
+- If multiple approaches exist, discuss them naturally as part of your analysis (don't force artificial "A vs B" comparisons)
 
 You have access to a web_search tool. Use it when you need:
 - Current documentation or API references
-- Recent best practices or library updates
+- Recent best practices or library updates  
 - Specific error messages or solutions
 - Facts you're not certain about
 
-Output format (markdown):
-## Analysis
-- Intent
-- Key constraints / edge cases
-- Two approaches (A vs B) with trade-offs
-- Decision
+Structure your response naturally based on what the question requires:
+- For code review/analysis: explain what the code does, identify issues, suggest improvements
+- For architectural questions: discuss the design, its strengths, weaknesses, and alternatives
+- For debugging: trace through the logic, identify the root cause, propose fixes
+- For explanations: build understanding progressively from fundamentals to details
 
-## Solution
-- Final recommendation and, if relevant, code (typed, safe, production-ready).
-- Mention assumptions and limitations.`;
+Be thorough but not verbose. Focus on insights that matter.`;
 
   const maxHistory = 15;
   const recentMessages = toOpenAIMessages(state.messages.slice(-maxHistory));
-  console.log(
-    `[reasoner] Converted ${recentMessages.length} messages for OpenAI`,
-  );
+  // console.log(
+  //   `[reasoner] Converted ${recentMessages.length} messages for OpenAI`,
+  // );
 
   const response = await client.responses.create({
-    model: bestModel,
+    model: reasonerModel,
     text: {
       format: { type: "text" },
     },
@@ -318,11 +333,12 @@ Output format (markdown):
       effort: "medium",
       summary: "auto",
     },
-    max_output_tokens: 1500,
+    max_output_tokens: 8000,
+    // Note: gpt-5 models don't support temperature parameter
   });
 
   const content = response.output_text || "";
-  console.log(`[reasoner] Response length: ${content.length}`);
+  // console.log(`[reasoner] Response length: ${content.length}`);
   return { messages: [new AIMessage(content)] };
 }
 
@@ -360,24 +376,41 @@ const webSearchTool = {
  * @returns An array of search results with title, link, and snippet.
  */
 async function runWebSearch(query: string, k = 5) {
-  const tavily = new TavilySearch({
+  const tavily = new TavilySearchAPIWrapper({
     tavilyApiKey: process.env.TAVILY_API_KEY || "",
   });
 
-  const results: any = await tavily.invoke({
-    query: query,
-    k: k,
+  // TavilySearchAPIWrapper.rawResults() returns { query, results, response_time, answer?, ... }
+  const response = await tavily.rawResults({
+    query,
+    max_results: k,
+    include_answer: true, // Get a quick answer from Tavily
   });
 
-  return results.map((r: { title: any; link: any; snippet: any }) => ({
-    title: r.title,
-    link: r.link,
-    snippet: r.snippet,
-  }));
+  // console.log(`[runWebSearch] Raw response type: ${typeof response}`);
+  // console.log(`[runWebSearch] Response keys: ${Object.keys(response || {})}`);
+  // console.log(`[runWebSearch] Results count: ${response.results?.length || 0}`);
+
+  // The response has a results array with {title, url, content, score}
+  if (response && Array.isArray(response.results)) {
+    return {
+      answer: response.answer, // Tavily's LLM-generated answer
+      results: response.results.map((r) => ({
+        title: r.title || "Untitled",
+        link: r.url || "",
+        snippet: r.content || "",
+        score: r.score || 0,
+      })),
+    };
+  }
+
+  // console.error(`[runWebSearch] Unexpected response format:`, response);
+  return { answer: undefined, results: [] };
 }
 
 /**
- * Performs a web search using the web_search tool hosted by openai.
+ * Performs a web search using Tavily API and then generates a response.
+ * gpt-5-mini doesn't have native web_search, so we use Tavily directly.
  * @param state Holds the current state of the graph
  * @returns the model response wrapped in AIMessage
  */
@@ -387,7 +420,50 @@ async function webSearchNode(
   logState("web_search", state);
 
   const history = toOpenAIMessages(state.messages.slice(-8));
-  console.log(`[web_search] Converted ${history.length} messages for OpenAI`);
+  // console.log(`[web_search] Converted ${history.length} messages for OpenAI`);
+
+  // Extract the user's latest query for web search
+  const lastUserMessage = [...state.messages]
+    .reverse()
+    .find((m) => getMessageType(m) === "human");
+  const searchQuery = getMessageContent(lastUserMessage) || "latest news";
+  // console.log(`[web_search] Search query: "${searchQuery}"`);
+
+  // Perform web search using Tavily
+  let webContext = "";
+  let tavilyAnswer = "";
+  try {
+    // console.log(`[web_search] Calling Tavily API...`);
+    const searchResponse = await runWebSearch(searchQuery, 5);
+    // console.log(`[web_search] Got ${searchResponse.results.length} results from Tavily`);
+
+    // Tavily's answer (if available) is already a good summary
+    if (searchResponse.answer) {
+      tavilyAnswer = searchResponse.answer;
+      // console.log(`[web_search] Tavily answer: "${tavilyAnswer.slice(0, 100)}..."`);
+    }
+
+    if (searchResponse.results.length > 0) {
+      webContext = "\n\n=== WEB SEARCH RESULTS ===\n";
+      searchResponse.results.forEach(
+        (
+          result: {
+            title: string;
+            link: string;
+            snippet: string;
+            score: number;
+          },
+          idx: number,
+        ) => {
+          webContext += `\n[${idx + 1}] ${result.title}\nURL: ${result.link}\n${result.snippet}\n`;
+        },
+      );
+      webContext += "\n=== END OF SEARCH RESULTS ===\n";
+    }
+  } catch (err) {
+    // console.error(`[web_search] Tavily search failed:`, err);
+    webContext = "\n\n[Web search temporarily unavailable]\n";
+  }
 
   const response = await client.responses.create({
     model: chatModel,
@@ -397,24 +473,26 @@ async function webSearchNode(
     input: [
       {
         role: "system",
-        content:
-          "You can use the web_search tool for anything requiring fresh or factual data. Prefer citing URLs in the reply.",
+        content: `You are a helpful assistant with access to real-time web search results.
+
+IMPORTANT: You MUST use the web search results provided below to answer the user's question with the LATEST, most current information. Do NOT say you cannot access real-time data - the search results ARE real-time data.
+
+Always:
+- Reference specific facts from the search results
+- Cite sources using [1], [2], etc.
+- Provide the actual data/information requested (weather, news, etc.)
+- If the search results contain the answer, USE THEM
+
+${tavilyAnswer ? `\nTavily's Quick Answer: ${tavilyAnswer}\n` : ""}Web search results:${webContext}`,
       },
       ...history,
     ],
-    tool_choice: "auto",
-    tools: [
-      {
-        type: "web_search",
-      },
-    ],
-    truncation: "auto",
-    max_output_tokens: 1000,
-    temperature: 0.2,
+    temperature: 0.3,
+    max_output_tokens: 4000,
   });
 
   const content = response.output_text || "";
-  console.log(`[web_search] Response length: ${content.length}`);
+  // console.log(`[web_search] Response length: ${content.length}`);
   return { messages: [new AIMessage(content)] };
 }
 
@@ -423,13 +501,13 @@ async function webSearchNode(
  * The supervisor will decide which worker to use based on the message content
  */
 function startRouter(state: typeof ChatAgentState.State): string {
-  console.log(`\n${"#".repeat(60)}`);
-  console.log(`[START ROUTER] Invoked`);
-  console.log(`[START ROUTER] state.next = "${state.next}" (will be ignored)`);
-  console.log(
-    `[START ROUTER] Always routing to supervisor for fresh routing decision`,
-  );
-  console.log(`${"#".repeat(60)}\n`);
+  // console.log(`\n${"#".repeat(60)}`);
+  // console.log(`[START ROUTER] Invoked`);
+  // console.log(`[START ROUTER] state.next = "${state.next}" (will be ignored)`);
+  // console.log(
+  //   `[START ROUTER] Always routing to supervisor for fresh routing decision`,
+  // );
+  // console.log(`${"#".repeat(60)}\n`);
 
   // Always go to supervisor - it will look at the actual message content
   // and decide which worker to route to
@@ -448,7 +526,7 @@ const flow = new StateGraph(ChatAgentState)
   .addConditionalEdges(
     "supervisor",
     (state) => {
-      console.log(`[SUPERVISOR EDGE] Routing to: ${state.next}`);
+      // console.log(`[SUPERVISOR EDGE] Routing to: ${state.next}`);
       return state.next;
     },
     {
@@ -486,18 +564,18 @@ export async function invokeGraph(
   messages: Array<{ role: "user" | "assistant" | "system"; content: string }>,
   mode: ChatMode = "auto",
 ): Promise<{ response: string; usedMode: string }> {
-  console.log("\n" + "█".repeat(70));
-  console.log("[GRAPH] invokeGraph START");
-  console.log("[GRAPH] mode:", mode);
-  console.log("[GRAPH] input messages count:", messages.length);
+  // console.log("\n" + "█".repeat(70));
+  // console.log("[GRAPH] invokeGraph START");
+  // console.log("[GRAPH] mode:", mode);
+  // console.log("[GRAPH] input messages count:", messages.length);
 
   // Log each message briefly
-  messages.forEach((m, i) => {
-    console.log(
-      `[GRAPH] msg[${i}] ${m.role}: "${m.content.slice(0, 80)}${m.content.length > 80 ? "..." : ""}"`,
-    );
-  });
-  console.log("█".repeat(70));
+  // messages.forEach((m, i) => {
+  //   console.log(
+  //     `[GRAPH] msg[${i}] ${m.role}: "${m.content.slice(0, 80)}${m.content.length > 80 ? "..." : ""}"`,
+  //   );
+  // });
+  // console.log("█".repeat(70));
 
   const lcMessages: BaseMessage[] = messages.map((m) => {
     if (m.role === "system") return new SystemMessage(m.content);
@@ -506,16 +584,16 @@ export async function invokeGraph(
   });
 
   const startNode = modeToNode[mode];
-  console.log("[GRAPH] Starting node:", startNode);
+  // console.log("[GRAPH] Starting node:", startNode);
 
   const result = await graph.invoke({
     messages: lcMessages,
     next: startNode,
   });
 
-  console.log("[GRAPH] Graph execution complete");
-  console.log("[GRAPH] Final state.next:", result.next);
-  console.log("[GRAPH] Final messages count:", result.messages.length);
+  // console.log("[GRAPH] Graph execution complete");
+  // console.log("[GRAPH] Final state.next:", result.next);
+  // console.log("[GRAPH] Final messages count:", result.messages.length);
 
   const lastMessage = result.messages[result.messages.length - 1];
   const response =
@@ -533,9 +611,9 @@ export async function invokeGraph(
     usedMode = nodeToMode[result.next] || "chat";
   }
 
-  console.log("[GRAPH] usedMode:", usedMode);
-  console.log("[GRAPH] response length:", response.length);
-  console.log("█".repeat(70) + "\n");
+  // console.log("[GRAPH] usedMode:", usedMode);
+  // console.log("[GRAPH] response length:", response.length);
+  // console.log("█".repeat(70) + "\n");
 
   return { response, usedMode };
 }

@@ -1,20 +1,22 @@
 import { ipcMain } from "electron";
 import * as aiService from "../services/ai";
 
+// the console.log statements were made for tracing to catch errors
+
 ipcMain.handle("ai:ghost", async (_event, args) => {
-  console.log("[IPC][ai:ghost] request:", { args });
+  // console.log("[IPC][ai:ghost] request:", { args });
   try {
     const result = await aiService.ghostCompletion(args);
-    console.log("[IPC][ai:ghost] got result:", {
-      ok: true,
-      length: typeof result === "string" ? result.length : undefined,
-    });
+    // console.log("[IPC][ai:ghost] got result:", {
+    //   ok: true,
+    //   length: typeof result === "string" ? result.length : undefined,
+    // });
     return {
       ok: true,
       data: result,
     };
   } catch (err) {
-    console.error("[IPC][ai:ghost] error:", err);
+    // console.error("[IPC][ai:ghost] error:", err);
     return {
       ok: false,
       error: err instanceof Error ? err.message : String(err),
@@ -23,17 +25,17 @@ ipcMain.handle("ai:ghost", async (_event, args) => {
 });
 
 ipcMain.handle("ai:chat", async (_event, args) => {
-  console.log("\n" + "=".repeat(70));
-  console.log("[IPC][ai:chat] REQUEST RECEIVED");
-  console.log("[IPC][ai:chat] mode:", args.mode);
-  console.log("[IPC][ai:chat] hasContext:", !!args.context);
-  console.log("[IPC][ai:chat] hasHistory:", !!args.history);
-  console.log("[IPC][ai:chat] historyLength:", args.history?.length || 0);
-  console.log(
-    "[IPC][ai:chat] query (first 100 chars):",
-    args.query?.slice(0, 100),
-  );
-  console.log("=".repeat(70));
+  // console.log("\n" + "=".repeat(70));
+  // console.log("[IPC][ai:chat] REQUEST RECEIVED");
+  // console.log("[IPC][ai:chat] mode:", args.mode);
+  // console.log("[IPC][ai:chat] hasContext:", !!args.context);
+  // console.log("[IPC][ai:chat] hasHistory:", !!args.history);
+  // console.log("[IPC][ai:chat] historyLength:", args.history?.length || 0);
+  // console.log(
+  //   "[IPC][ai:chat] query (first 100 chars):",
+  //   args.query?.slice(0, 100),
+  // );
+  // console.log("=".repeat(70));
 
   try {
     const mode = args.mode || "auto";
@@ -42,20 +44,20 @@ ipcMain.handle("ai:chat", async (_event, args) => {
 
     const { graphBasedChat } = await import("../services/ai");
 
-    console.log("[IPC][ai:chat] Calling graphBasedChat with mode:", mode);
+    // console.log("[IPC][ai:chat] Calling graphBasedChat with mode:", mode);
 
     const graphResult = await graphBasedChat({
       query: args.query,
       mode: mode,
       context: args.context,
-      history: args.history, 
+      history: args.history,
     });
 
     result = graphResult.response;
     usedMode = graphResult.usedMode;
 
-    console.log("[IPC][ai:chat] Graph returned, usedMode:", usedMode);
-    console.log("[IPC][ai:chat] Response length:", result?.length);
+    // console.log("[IPC][ai:chat] Graph returned, usedMode:", usedMode);
+    // console.log("[IPC][ai:chat] Response length:", result?.length);
 
     return {
       ok: true,
@@ -63,7 +65,7 @@ ipcMain.handle("ai:chat", async (_event, args) => {
       mode: usedMode,
     };
   } catch (err) {
-    console.error("[IPC][ai:chat] ERROR:", err);
+    // console.error("[IPC][ai:chat] ERROR:", err);
     return {
       ok: false,
       error: err instanceof Error ? err.message : String(err),
@@ -72,23 +74,25 @@ ipcMain.handle("ai:chat", async (_event, args) => {
 });
 
 ipcMain.handle("ai:ragChat", async (_event, args) => {
-  console.log("[IPC][ai:ragChat] request:", {
-    hasFileContent: !!args.fileContent,
-    contextMode: args.contextMode,
-  });
+  // console.log("[IPC][ai:ragChat] request:", {
+  //   hasFileContent: !!args.fileContent,
+  //   contextMode: args.contextMode,
+  //   historyLength: args.history?.length || 0,
+  // });
   try {
     const result = await aiService.ragChat({
       query: args.query,
       fileContent: args.fileContent,
       filePath: args.filePath,
       contextMode: args.contextMode || "file",
+      history: args.history,
     });
     return {
       ok: true,
       data: result,
     };
   } catch (err) {
-    console.error("[IPC][ai:ragChat] error:", err);
+    // console.error("[IPC][ai:ragChat] error:", err);
     return {
       ok: false,
       error: err instanceof Error ? err.message : String(err),
@@ -97,7 +101,7 @@ ipcMain.handle("ai:ragChat", async (_event, args) => {
 });
 
 ipcMain.handle("ai:indexCodebase", async () => {
-  console.log("[IPC][ai:indexCodebase] Starting codebase indexing...");
+  // console.log("[IPC][ai:indexCodebase] Starting codebase indexing...");
   try {
     const result = await aiService.indexEntireCodebase();
     return {
@@ -105,7 +109,7 @@ ipcMain.handle("ai:indexCodebase", async () => {
       data: result,
     };
   } catch (err) {
-    console.error("[IPC][ai:indexCodebase] error:", err);
+    // console.error("[IPC][ai:indexCodebase] error:", err);
     return {
       ok: false,
       error: err instanceof Error ? err.message : String(err),

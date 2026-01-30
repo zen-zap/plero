@@ -17,6 +17,11 @@ const MENU_STRUCTURE: MenuSection[] = [
   {
     label: "File",
     items: [
+      {
+        label: "Open Folder...",
+        action: "open-folder",
+        shortcut: "Ctrl+Shift+O",
+      },
       { label: "New File", action: "new", shortcut: "Ctrl+N" },
       { label: "Open File...", action: "open", shortcut: "Ctrl+O" },
       { label: "separator", type: "separator" },
@@ -73,7 +78,15 @@ const MENU_STRUCTURE: MenuSection[] = [
   },
 ];
 
-export const MenuBar: React.FC = () => {
+interface MenuBarProps {
+  rootFolderName?: string;
+  isIndexing?: boolean;
+}
+
+export const MenuBar: React.FC<MenuBarProps> = ({
+  rootFolderName,
+  isIndexing,
+}) => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { dispatch } = useCommands();
@@ -120,11 +133,8 @@ export const MenuBar: React.FC = () => {
     >
       {/* Logo */}
       <div className="px-5 py-2 flex items-center gap-2">
-        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-dusk-blue to-lavender-grey flex items-center justify-center">
-          <span className="text-ink-black font-bold text-xs">P</span>
-        </div>
         <span className="font-bold text-alabaster-grey tracking-wide">
-          PLERO
+          Plero
         </span>
       </div>
 
@@ -179,11 +189,40 @@ export const MenuBar: React.FC = () => {
         ))}
       </div>
 
-      {/* Spacer */}
-      <div className="flex-1" />
+      {/* Center - Root Folder Name */}
+      <div className="flex-1 flex justify-center items-center">
+        {rootFolderName && (
+          <div className="flex items-center gap-2 px-3 py-1 bg-ink-black/30 rounded-lg border border-dusk-blue/20">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-dusk-blue"
+            >
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+            <span className="text-sm text-alabaster-grey font-medium">
+              {rootFolderName}
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Quick Actions */}
       <div className="flex items-center gap-2 px-4">
+        {/* Indexing Indicator */}
+        {isIndexing && (
+          <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-dusk-blue bg-dusk-blue/10 border border-dusk-blue/30 rounded-lg animate-pulse">
+            <div className="w-3 h-3 border-2 border-dusk-blue/30 border-t-dusk-blue rounded-full animate-spin" />
+            <span>Indexing...</span>
+          </div>
+        )}
         <button
           onClick={() => dispatch("command-palette")}
           className="flex items-center gap-2 px-3 py-1.5 text-xs text-lavender-grey hover:text-alabaster-grey bg-ink-black/50 hover:bg-dusk-blue/20 border border-dusk-blue/20 rounded-lg transition-all"

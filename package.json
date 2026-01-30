@@ -2,6 +2,9 @@
     "name": "plero",
     "version": "1.0.0",
     "main": "dist/main.js",
+    "description": "AI-powered code editor with ghost completions and RAG-enhanced chat",
+    "author": "zen-zap",
+    "license": "ISC",
     "scripts": {
         "build": "tsc --noEmitOnError false",
         "build:frontend": "npm run build:react && npm run build:main",
@@ -17,15 +20,71 @@
         "test:watch": "vitest --watch",
         "test:electron": "npx electron-mocha --require ts-node/register src/tests/ipc_tests/*.test.ts",
         "lint": "tsc --noEmit",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "dist": "npm run build:frontend && electron-builder --linux",
+        "dist:appimage": "npm run build:frontend && electron-builder --linux AppImage",
+        "dist:deb": "npm run build:frontend && electron-builder --linux deb"
+    },
+    "build": {
+        "appId": "com.zenzap.plero",
+        "productName": "Plero",
+        "files": [
+            "dist/**/*",
+            "src/renderer/index.html",
+            "node_modules/**/*",
+            "!node_modules/**/test/**",
+            "!node_modules/**/docs/**",
+            "!node_modules/**/*.md"
+        ],
+        "directories": {
+            "output": "release",
+            "buildResources": "build"
+        },
+        "linux": {
+            "target": [
+                "AppImage",
+                "deb"
+            ],
+            "category": "Development",
+            "maintainer": "zen-zap",
+            "icon": "build/icon.png"
+        },
+        "appImage": {
+            "artifactName": "${productName}-${version}-${arch}.AppImage"
+        },
+        "deb": {
+            "artifactName": "${productName}-${version}-${arch}.deb",
+            "depends": [
+                "libgtk-3-0",
+                "libnotify4",
+                "libnss3",
+                "libxss1",
+                "libxtst6",
+                "xdg-utils",
+                "libatspi2.0-0",
+                "libuuid1",
+                "libsecret-1-0"
+            ]
+        },
+        "extraResources": [
+            {
+                "from": ".plero_keys_example",
+                "to": ".plero_keys_example",
+                "filter": ["**/*"]
+            }
+        ]
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/zen-zap/plero.git"
     },
-    "keywords": [],
-    "author": "zen-zap",
-    "license": "ISC",
+    "keywords": [
+        "code-editor",
+        "ai",
+        "electron",
+        "typescript",
+        "rag"
+    ],
     "type": "commonjs",
     "dependencies": {
         "@codemirror/autocomplete": "^6.20.0",
@@ -64,6 +123,7 @@
         "concurrently": "^9.2.1",
         "cross-env": "^10.1.0",
         "electron": "^40.0.0",
+        "electron-builder": "^26.4.0",
         "electron-mocha": "^13.0.0",
         "jsdom": "^27.4.0",
         "postcss": "^8.5.6",

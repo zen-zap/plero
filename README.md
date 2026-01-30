@@ -19,8 +19,17 @@ You can get ghost completion suggestions when writing code in rust and typescrip
 
 ## Usage:
 
-You'll have to make your own OPENAI_API_KEY and other API keys as mentioned in the `demo.env` file at the project root.
-Fill in the API keys, rename the file to `.env` and you're good to go.
+You'll need to set up your API keys:
+
+1. Create the config directory: `mkdir -p ~/.plero_keys`
+2. Create the env file: `touch ~/.plero_keys/.env`
+3. Add your API keys to `~/.plero_keys/.env`:
+   ```
+   OPENAI_API_KEY=your_openai_key_here
+   TAVILY_API_KEY=your_tavily_key_here
+   ```
+
+See `demo.env` at the project root for reference.
 
 The services are paid and I can't afford to provide any as a student.
 

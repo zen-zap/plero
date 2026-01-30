@@ -13,6 +13,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 }) => {
   return (
     <div className={`markdown-content ${className}`}>
+      {/* Different markdown things */}
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

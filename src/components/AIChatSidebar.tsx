@@ -15,6 +15,7 @@ interface AIChatSidebarProps {
   onClose: () => void;
   activeFileContent?: string;
   activeFilePath?: string;
+  onIndexingChange?: (isIndexing: boolean) => void;
 }
 
 const ModeIcon: React.FC<{ mode: ChatMode }> = ({ mode }) => {
@@ -121,6 +122,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
   onClose,
   activeFileContent,
   activeFilePath,
+  onIndexingChange,
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -202,12 +204,14 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
           fileContent: activeFileContent,
           filePath: activeFilePath,
           contextMode: "file",
+          history: history,
         });
       } else if (effectiveContextMode === "codebase") {
         // Search across entire codebase using HNSW
         response = await window.electronAPI.aiRagChat({
           query: userMessage.content,
           contextMode: "codebase",
+          history: history,
         });
       } else {
         // No context - use standard chat through graph
@@ -275,6 +279,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
   // Index the entire codebase for context search
   const handleIndexCodebase = async () => {
     setIsIndexing(true);
+    onIndexingChange?.(true);
     setIndexProgress("Starting codebase indexing...");
     try {
       const result = await window.electronAPI.indexCodebase?.();
@@ -288,6 +293,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
       setIndexProgress(`Error: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setIsIndexing(false);
+      onIndexingChange?.(false);
     }
   };
 
@@ -565,7 +571,7 @@ export const AIChatSidebar: React.FC<AIChatSidebarProps> = ({
             </button>
 
             {showContextMenu && (
-              <div className="absolute bottom-full left-0 mb-2 bg-ink-black/95 backdrop-blur-xl border border-dusk-blue/30 rounded-xl shadow-2xl py-2 min-w-[200px] z-10 animate-fade-in">
+              <div className="absolute bottom-full right-0 mb-2 bg-ink-black/95 backdrop-blur-xl border border-dusk-blue/30 rounded-xl shadow-2xl py-2 min-w-[200px] z-10 animate-fade-in">
                 {(["none", "file", "codebase"] as ContextMode[]).map((cm) => (
                   <button
                     key={cm}

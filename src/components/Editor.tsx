@@ -12,12 +12,13 @@ import {
   CompletionContext,
   CompletionResult,
 } from "@codemirror/autocomplete";
-import {
-  search,
-  searchKeymap,
-  openSearchPanel,
-  closeSearchPanel,
-} from "@codemirror/search";
+// import {
+//   search,
+//   searchKeymap,
+//   openSearchPanel,
+//   closeSearchPanel,
+// } from "@codemirror/search";
+import { FindReplace, FindOptions } from "./FindReplace";
 import { TreeNode } from "./FileExplorer";
 import { useCommands } from "../renderer/contexts/ActionsContext";
 import { Breadcrumb } from "./Breadcrumb";
@@ -31,6 +32,7 @@ interface EditorProps {
   onSave: (path: string, content: string) => void;
   onNew: () => void;
   onOpen: () => void;
+  onOpenFolder: () => void;
   openTabs?: TreeNode[];
   onSelectTab?: (file: TreeNode) => void;
   onCloseTab?: (path: string) => void;
@@ -64,6 +66,16 @@ export const Editor: React.FC<EditorProps> = ({
   const [selectionInfo, setSelectionInfo] = useState({ chars: 0, lines: 0 });
   const viewRef = useRef<EditorView | null>(null);
   const ghostAbortRef = useRef<AbortController | null>(null);
+
+  const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
+  const [findMatches, setFindMatches] = useState<{ from: number, to: number }[]>([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const [lastFindQuery, setLastFindQuery] = useState("");
+  const [lastFindOptions, setLastFindOptions] = useState<FindOptions>({
+    caseSensitive: false,
+    wholeWord: false,
+    regex: false,
+  });
 
   const handleCreateEditor = useCallback((view: EditorView) => {
     viewRef.current = view;
@@ -118,11 +130,11 @@ export const Editor: React.FC<EditorProps> = ({
 
       try {
         setIsGhostLoading(true);
-        console.log("[Editor] aiGhost request", {
-          language,
-          prefixLen: prefix.length,
-          suffixLen: suffix.length,
-        });
+        // console.log("[Editor] aiGhost request", {
+        //   language,
+        //   prefixLen: prefix.length,
+        //   suffixLen: suffix.length,
+        // });
 
         const result = await window.electronAPI.aiGhost({
           prefix,
@@ -133,17 +145,17 @@ export const Editor: React.FC<EditorProps> = ({
         setIsGhostLoading(false);
 
         if (context.aborted || ghostAbortRef.current?.signal.aborted) {
-          console.log("Typing detected, aborting mid-response.");
+          // console.log("Typing detected, aborting mid-response.");
           return null;
         }
 
-        console.log(
-          "[Editor] aiGhost result",
-          result &&
-            (result.ok
-              ? { ok: true, dataLen: result.data?.length }
-              : { ok: false, error: result.error }),
-        );
+        // console.log(
+        //   "[Editor] aiGhost result",
+        //   result &&
+        //     (result.ok
+        //       ? { ok: true, dataLen: result.data?.length }
+        //       : { ok: false, error: result.error }),
+        // );
 
         if (!result.ok || !result.data) return null;
 
@@ -168,7 +180,7 @@ export const Editor: React.FC<EditorProps> = ({
         };
       } catch (err) {
         setIsGhostLoading(false);
-        console.error("Ghost Completion Error:", err);
+        // console.error("Ghost Completion Error:", err);
         return null;
       }
     },
@@ -198,9 +210,12 @@ export const Editor: React.FC<EditorProps> = ({
 
     // Find command
     const unsubFind = register("find", () => {
-      if (viewRef.current) {
-        openSearchPanel(viewRef.current);
-      }
+      setIsFindReplaceOpen(true);
+    });
+
+    // Find and Replace command
+    const unsubFindReplace = register("find-replace", () => {
+      setIsFindReplaceOpen(true);
     });
 
     // Toggle word wrap
@@ -219,6 +234,7 @@ export const Editor: React.FC<EditorProps> = ({
       });
     });
 
+    // maybe upgrade this part to use the new clipboard api: TODO
     const unsubCopy = register("copy", () => {
       if (viewRef.current) document.execCommand("copy");
     });
@@ -236,6 +252,7 @@ export const Editor: React.FC<EditorProps> = ({
       unsubNew();
       unsubOpen();
       unsubFind();
+      unsubFindReplace();
       unsubWordWrap();
       unsubToggleGhost();
       unsubCopy();
@@ -293,6 +310,115 @@ export const Editor: React.FC<EditorProps> = ({
     [setIsDirty],
   );
 
+  const handleFind = useCallback((query: string, options: FindOptions) => {
+    if(!query || !viewRef.current) {
+      setFindMatches([]);
+      setCurrentMatchIndex(0);
+      return;
+    }
+
+    setLastFindQuery(query);
+    setLastFindOptions(options);
+
+    const doc = viewRef.current.state.doc.toString();
+    const matches: { from: number, to: number }[] = [];
+
+    let searchPattern: RegExp;
+    try {
+      if(options.regex) {
+        searchPattern = new RegExp(query, options.caseSensitive ? 'g' : 'gi');
+      } else {
+        const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = options.wholeWord ? `\\b${escaped}\\b` : escaped;
+        searchPattern = new RegExp(pattern, options.caseSensitive ? 'g' : 'gi');
+      }
+    } catch(e) {
+      setFindMatches([]);
+      return;
+    }
+
+    let match;
+    while((match = searchPattern.exec(doc)) !== null) {
+      matches.push({ from: match.index, to: match.index + match[0].length });
+    }
+    setFindMatches(matches);
+    setCurrentMatchIndex(matches.length > 0 ? 1 : 0);
+
+    // we scroll to the first match
+    if(matches.length > 0 && viewRef.current) {
+      const from = matches[0].from;
+      const to = matches[0].to;
+      viewRef.current.dispatch({
+        selection: { anchor: from, head: to },
+        scrollIntoView: true,
+      });
+    }
+  }, []);
+
+  const handleFindNext = useCallback(() => {
+    if(findMatches.length === 0 || !viewRef.current) return;
+
+    const nextIndex = currentMatchIndex >= findMatches.length ? 1 : currentMatchIndex + 1;
+    setCurrentMatchIndex(nextIndex);
+
+    const match = findMatches[nextIndex - 1];
+    viewRef.current.dispatch({
+      selection: { anchor: match.from, head: match.to },
+      scrollIntoView: true,
+    });
+  }, [findMatches, currentMatchIndex]);
+
+  const handleFindPrevious = useCallback(() => {
+    if (findMatches.length === 0 || !viewRef.current) return;
+
+    const prevIndex =
+      currentMatchIndex <= 1 ? findMatches.length : currentMatchIndex - 1;
+    setCurrentMatchIndex(prevIndex);
+
+    const match = findMatches[prevIndex - 1];
+    viewRef.current.dispatch({
+      selection: { anchor: match.from, head: match.to },
+      scrollIntoView: true,
+    });
+  }, [findMatches, currentMatchIndex]);
+
+  const handleReplace = useCallback((replacement: string) => {
+    if (findMatches.length === 0 || !viewRef.current || currentMatchIndex === 0) return;
+    
+    const match = findMatches[currentMatchIndex - 1];
+    const view = viewRef.current;
+    
+    view.dispatch({
+      changes: { from: match.from, to: match.to, insert: replacement }
+    });
+    
+    // Re-run find to update matches after replacement
+    setTimeout(() => handleFind(lastFindQuery, lastFindOptions), 10);
+  }, [findMatches, currentMatchIndex, handleFind, lastFindQuery, lastFindOptions]);
+
+  const handleReplaceAll = useCallback((replacement: string) => {
+    if (findMatches.length === 0 || !viewRef.current) return;
+    
+    const view = viewRef.current;
+    
+    // Apply replacements from end to start to preserve positions
+    const changes = [...findMatches]
+      .reverse()
+      .map(match => ({ from: match.from, to: match.to, insert: replacement }));
+    
+    view.dispatch({ changes });
+    
+    setFindMatches([]);
+    setCurrentMatchIndex(0);
+    onShowToast?.(`Replaced ${findMatches.length} occurrences`, "success");
+  }, [findMatches, onShowToast]);
+
+  const handleCloseFindReplace = useCallback(() => {
+    setIsFindReplaceOpen(false);
+    setFindMatches([]);
+    setCurrentMatchIndex(0);
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
@@ -306,9 +432,13 @@ export const Editor: React.FC<EditorProps> = ({
       // Ctrl+F for find
       if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
-        if (viewRef.current) {
-          openSearchPanel(viewRef.current);
-        }
+        setIsFindReplaceOpen(true);
+      }
+
+      // Ctrl+H for find and replace
+      if ((e.ctrlKey || e.metaKey) && e.key === "h") {
+        e.preventDefault();
+        setIsFindReplaceOpen(true);
       }
     };
 
@@ -320,9 +450,9 @@ export const Editor: React.FC<EditorProps> = ({
     const path = activeFile?.path || "";
     const exts: any[] = [];
 
-    // Built-in search
-    exts.push(search());
-    exts.push(keymap.of(searchKeymap));
+    // // Built-in search // using custom
+    // exts.push(search());
+    // exts.push(keymap.of(searchKeymap));
 
     // Word wrap
     if (wordWrap) {
@@ -379,9 +509,6 @@ export const Editor: React.FC<EditorProps> = ({
               <line x1="16" y1="17" x2="8" y2="17" />
               <line x1="10" y1="9" x2="8" y2="9" />
             </svg>
-          </div>
-          <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-dusk-blue/30 flex items-center justify-center">
-            <span className="text-lg">✨</span>
           </div>
         </div>
         <h2 className="text-xl font-semibold text-alabaster-grey mb-2">
@@ -573,7 +700,21 @@ export const Editor: React.FC<EditorProps> = ({
       <Breadcrumb path={activeFile.path} />
 
       {/* Editor Surface */}
-      <div className="flex-grow overflow-hidden relative text-[14px]">
+      <div className="flex-grow overflow-auto relative text-[14px]">
+
+        {/* Custom Find/Replace Panel */}
+        <FindReplace
+          isOpen={isFindReplaceOpen}
+          onClose={handleCloseFindReplace}
+          onFind={handleFind}
+          onFindNext={handleFindNext}
+          onFindPrevious={handleFindPrevious}
+          onReplace={handleReplace}
+          onReplaceAll={handleReplaceAll}
+          matchCount={findMatches.length}
+          currentMatch={currentMatchIndex}
+        />
+
         {/* Ghost loading indicator */}
         {isGhostLoading && (
           <div className="absolute top-3 right-3 z-10 flex items-center gap-2 px-3 py-2 bg-prussian-blue/95 backdrop-blur-sm rounded-xl border border-dusk-blue/30 shadow-lg animate-fade-in">
@@ -583,6 +724,7 @@ export const Editor: React.FC<EditorProps> = ({
             </span>
           </div>
         )}
+
         <CodeMirror
           value={localContent}
           height="100%"

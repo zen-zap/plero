@@ -237,4 +237,4 @@ export const FindReplace: React.FC<FindReplaceProps> = ({
   );
 };
 
-// Where is the logic for finding the matches??
+{/* We use the find and replace functionality logic from the editor itself. Here, this is just the UI */}

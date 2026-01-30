@@ -10,6 +10,7 @@ export function useFileSystem() {
   const [untitledCounter, setUntitledCounter] = useState<number>(1);
   const [openTabs, setOpenTabs] = useState<TreeNode[]>([]);
   const [isDirty, setIsDirty] = useState(false);
+  const [isIndexingCodebase, setIsIndexingCodebase] = useState(false);
 
   const loadTree = useCallback(() => {
     window.electronAPI
@@ -24,6 +25,96 @@ export function useFileSystem() {
   // Load file tree on startup
   useEffect(() => {
     loadTree();
+  }, [loadTree]);
+
+  // Auto-index on startup if a folder is already open
+  useEffect(() => {
+    const indexOnStartup = async () => {
+      try {
+        const result = await window.electronAPI.getRoot();
+        if (result.ok && result.data) {
+          // A folder is already set from a previous session - index it
+          // console.log(
+          //   "[useFileSystem] Found existing root folder, indexing on startup:",
+          //   result.data,
+          // );
+          setIsIndexingCodebase(true);
+          try {
+            const indexResult = await window.electronAPI.indexCodebase?.();
+            if (indexResult?.ok) {
+              // console.log(
+              //   "[useFileSystem] Startup indexing completed:",
+              //   indexResult.data,
+              // );
+            } else {
+              // console.error(
+              //   "[useFileSystem] Startup indexing failed:",
+              //   indexResult?.error,
+              // );
+            }
+          } catch (indexErr) {
+            // console.error(
+            //   "[useFileSystem] Error during startup indexing:",
+            //   indexErr,
+            // );
+          } finally {
+            setIsIndexingCodebase(false);
+          }
+        }
+      } catch (err) {
+        // console.error("[useFileSystem] Error checking root on startup:", err);
+      }
+    };
+    indexOnStartup();
+  }, []); // Run once on mount
+
+  const openFolderDialog = useCallback(async () => {
+    try {
+      const res = await window.electronAPI.openFolderDialog();
+
+      if (!res.ok || !res.data) {
+        return;
+      }
+
+      const folderPath = res.data;
+      const setRootResult = await window.electronAPI.setRoot(folderPath);
+      if (!setRootResult.ok) {
+        setError(setRootResult.error || "Failed to set folder");
+        return;
+      }
+
+      setActiveFile(null);
+      setFileContent("");
+      setOpenTabs([]);
+      setIsDirty(false);
+
+      // we reload the file tree
+      loadTree();
+
+      // Auto-index the codebase for AI context
+      setIsIndexingCodebase(true);
+      // console.log("[useFileSystem] Starting codebase indexing...");
+      try {
+        const indexResult = await window.electronAPI.indexCodebase?.();
+        if (indexResult?.ok) {
+          // console.log(
+          //   "[useFileSystem] Codebase indexed successfully:",
+          //   indexResult.data,
+          // );
+        } else {
+          // console.error(
+          //   "[useFileSystem] Codebase indexing failed:",
+          //   indexResult?.error,
+          // );
+        }
+      } catch (indexErr) {
+        // console.error("[useFileSystem] Error indexing codebase:", indexErr);
+      } finally {
+        setIsIndexingCodebase(false);
+      }
+    } catch (err) {
+      // console.error("Error opening folder:", err);
+    }
   }, [loadTree]);
 
   const selectFile = useCallback((file: TreeNode) => {
@@ -91,20 +182,20 @@ export function useFileSystem() {
 
   const saveFile = useCallback(
     async (path: string, content: string) => {
-      console.log("Saving file:", path);
+      // console.log("Saving file:", path);
       try {
         const res = await window.electronAPI.saveFile(path, content);
         if (res.ok) {
-          console.log("File saved successfully.");
+          // console.log("File saved successfully.");
           // We reload the tree to see new timestamps or if a new file was created
           loadTree();
           return true;
         } else {
-          console.error("Failed to save file.");
+          // console.error("Failed to save file.");
           return false;
         }
       } catch (err) {
-        console.error("Error saving file:", err);
+        // console.error("Error saving file:", err);
         return false;
       }
     },
@@ -145,7 +236,7 @@ export function useFileSystem() {
       }
       return false;
     } catch (err) {
-      console.error("Error opening file:", err);
+      // console.error("Error opening file:", err);
       return false;
     }
   }, []);
@@ -168,7 +259,7 @@ export function useFileSystem() {
         }
         return false;
       } catch (err) {
-        console.error("Error renaming:", err);
+        // console.error("Error renaming:", err);
         return false;
       }
     },
@@ -192,7 +283,7 @@ export function useFileSystem() {
         }
         return false;
       } catch (err) {
-        console.error("Error deleting:", err);
+        // console.error("Error deleting:", err);
         return false;
       }
     },
@@ -210,7 +301,7 @@ export function useFileSystem() {
         }
         return false;
       } catch (err) {
-        console.error("Error creating file:", err);
+        // console.error("Error creating file:", err);
         return false;
       }
     },
@@ -228,7 +319,7 @@ export function useFileSystem() {
         }
         return false;
       } catch (err) {
-        console.error("Error creating folder:", err);
+        // console.error("Error creating folder:", err);
         return false;
       }
     },
@@ -247,11 +338,14 @@ export function useFileSystem() {
     saveFile,
     newFile,
     openFileDialog,
+    openFolderDialog,
     renameFile,
     deleteFile,
     createNewFile,
     createNewFolder,
     openTabs,
     closeTab,
+    isIndexingCodebase,
+    setIsIndexingCodebase,
   };
 }

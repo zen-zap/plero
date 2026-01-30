@@ -51,6 +51,7 @@ export type RagChatOptions = {
   fileContent?: string;
   filePath?: string;
   contextMode?: "file" | "codebase";
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
 };
 
 // Index codebase result
@@ -122,6 +123,15 @@ declare global {
         marker?: string,
       ) => Promise<ApiResponse<void>>;
       openDialog: () => Promise<ApiResponse<string>>;
+      openFolderDialog: () => Promise<{
+        ok: boolean;
+        data?: string;
+        error?: string;
+      }>;
+
+      // root directory operations
+      setRoot: (path: string) => Promise<{ ok: boolean; error?: string }>;
+      getRoot: () => Promise<{ ok: boolean; data?: string; error?: string }>;
 
       // AI operations
       aiGhost: (options: GhostOptions) => Promise<ApiResponse<string>>;

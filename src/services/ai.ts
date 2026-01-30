@@ -1,6 +1,11 @@
 // in src/services/ai.ts
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import os from "os";
 import OpenAI from "openai";
+
+// Load API keys from ~/.plero_keys/.env
+dotenv.config({ path: path.join(os.homedir(), ".plero_keys", ".env") });
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 if (OPENAI_API_KEY == undefined) {
@@ -38,22 +43,22 @@ export async function ghostCompletion({
   model = "gpt-5.1-codex-mini",
   maxTokens = 128,
 }: GhostCompletionOptions): Promise<string> {
-  console.log("[AI] ghostCompletion start", {
-    language,
-    model,
-    maxTokens,
-    prefixLen: prefix?.length,
-    suffixLen: suffix?.length,
-  });
+  // console.log("[AI] ghostCompletion start", {
+  //   language,
+  //   model,
+  //   maxTokens,
+  //   prefixLen: prefix?.length,
+  //   suffixLen: suffix?.length,
+  // });
 
   if (prefix.trim().length < 3) {
     return "";
   }
 
-  console.log("[AI] OPENAI_API_KEY present?", !!OPENAI_API_KEY);
+  // console.log("[AI] OPENAI_API_KEY present?", !!OPENAI_API_KEY);
 
   if (!OPENAI_API_KEY) {
-    console.error("[AI] OPENAI_API_KEY is not set");
+    // console.error("[AI] OPENAI_API_KEY is not set");
     throw new Error("OPENAI_API_KEY is not set");
   }
 
@@ -76,7 +81,7 @@ export async function ghostCompletion({
 	;`;
 
   try {
-    console.log("[AI] invoking LLM... (truncating prompts in logs)");
+    // console.log("[AI] invoking LLM... (truncating prompts in logs)");
     const response = await client.responses.create({
       model: chosenModel,
       text: {
@@ -116,45 +121,45 @@ ${safeSuffix}
       ],
     });
 
-    console.log("[AI] llm.invoke response keys:", Object.keys(response || {}));
+    // console.log("[AI] llm.invoke response keys:", Object.keys(response || {}));
     // Log a truncated view of the response to aid debugging without spamming logs
-    try {
-      const truncated = JSON.stringify(
-        {
-          id: (response as any)?.id,
-          model: (response as any)?.model,
-          output_text: (response as any)?.output_text,
-          output_preview: Array.isArray((response as any)?.output)
-            ? (response as any).output.slice(0, 3)
-            : (response as any)?.output,
-        },
-        null,
-        2,
-      ).slice(0, 2000);
-      console.log("[AI] llm.invoke response (truncated):", truncated);
-    } catch (e) {
-      console.log("[AI] llm.invoke response (could not stringify):", e);
-    }
+    // try {
+    //   const truncated = JSON.stringify(
+    //     {
+    //       id: (response as any)?.id,
+    //       model: (response as any)?.model,
+    //       output_text: (response as any)?.output_text,
+    //       output_preview: Array.isArray((response as any)?.output)
+    //         ? (response as any).output.slice(0, 3)
+    //         : (response as any)?.output,
+    //     },
+    //     null,
+    //     2,
+    //   ).slice(0, 2000);
+    //   console.log("[AI] llm.invoke response (truncated):", truncated);
+    // } catch (e) {
+    //   console.log("[AI] llm.invoke response (could not stringify):", e);
+    // }
 
     let completion = (response as any).output_text || "";
-    console.log("[AI] raw completion length:", completion.length);
-    console.log(
-      "[AI] raw completion (first 2000 chars):",
-      completion.slice(0, 2000),
-    );
+    // console.log("[AI] raw completion length:", completion.length);
+    // console.log(
+    //   "[AI] raw completion (first 2000 chars):",
+    //   completion.slice(0, 2000),
+    // );
 
     // a little cleanup just in case
     if (completion.startsWith("```")) {
       completion = completion
         .replace(/^```[a-z]*\n?/, "")
         .replace(/\n?```$/, "");
-      console.log("[AI] stripped code fences, new length:", completion.length);
+      // console.log("[AI] stripped code fences, new length:", completion.length);
     }
 
-    console.log("[AI] final completion length:", completion.length);
+    // console.log("[AI] final completion length:", completion.length);
     return completion;
   } catch (err) {
-    console.error("[AI] ghostCompletion error:", err);
+    // console.error("[AI] ghostCompletion error:", err);
     throw err;
   }
 }
@@ -190,11 +195,22 @@ function shouldUseStructuralModel(prefix: string, language: string) {
 }
 
 import { graphChat, invokeGraph, ChatMode } from "./agent/graph";
+import {
+  estimateTokens,
+  pruneHistory,
+  truncateToTokenLimit,
+  MODEL_LIMITS,
+} from "./tokenManager";
 
 /**
  * Chat using the LangGraph multi-agent system.
  * Routes through supervisor in auto mode or directly to the selected node.
  * Supports full conversation history for multi-turn conversations.
+ *
+ * Token management:
+ * - History is pruned to fit within model context limits
+ * - Context is truncated if needed
+ * - Logs token usage for debugging
  */
 export async function graphBasedChat({
   query,
@@ -207,13 +223,63 @@ export async function graphBasedChat({
   context?: string;
   history?: Array<{ role: "user" | "assistant"; content: string }>;
 }): Promise<{ response: string; usedMode: string }> {
-  console.log("\n" + "-".repeat(70));
-  console.log("[AI Service] graphBasedChat START");
-  console.log("[AI Service] mode:", mode);
-  console.log("[AI Service] hasContext:", !!context);
-  console.log("[AI Service] historyLength:", history?.length || 0);
-  console.log("[AI Service] query:", query?.slice(0, 100));
-  console.log("-".repeat(70));
+  // console.log("\n" + "-".repeat(70));
+  // console.log("[AI Service] graphBasedChat START");
+  // console.log("[AI Service] mode:", mode);
+  // console.log("[AI Service] hasContext:", !!context);
+  // console.log("[AI Service] historyLength:", history?.length || 0);
+  // console.log("[AI Service] query:", query?.slice(0, 100));
+
+  // Token budget management
+  const model = "gpt-5-mini"; // Primary chat model
+  const modelLimit = MODEL_LIMITS[model] || MODEL_LIMITS["default"];
+  const responseReserve = 4000;
+  const availableTokens = modelLimit - responseReserve;
+
+  // Calculate fixed costs
+  const queryTokens = estimateTokens(query);
+  let contextTokens = context ? estimateTokens(context) : 0;
+
+  // Budget allocation: prioritize context, then history
+  // Context gets 60%, history gets 40% of remaining space
+  const maxContextTokens = Math.floor(availableTokens * 0.6);
+  const maxHistoryTokens = Math.floor(availableTokens * 0.35);
+  // Reserve 5% for query and overhead
+
+  // Truncate context if too large
+  let processedContext = context;
+  if (context && contextTokens > maxContextTokens) {
+    const truncated = truncateToTokenLimit(context, maxContextTokens);
+    processedContext = truncated.text;
+    // console.log(
+    //   `[AI Service] Context truncated: ${contextTokens} -> ${truncated.truncatedTokens} tokens`,
+    // );
+    contextTokens = truncated.truncatedTokens;
+  }
+
+  // Prune history to fit budget
+  let processedHistory = history || [];
+  if (history && history.length > 0) {
+    const pruned = pruneHistory(history, maxHistoryTokens, {
+      keepMinMessages: 4,
+      truncateLongMessages: true,
+      maxMessageTokens: 1500,
+    });
+    processedHistory = pruned.messages;
+    // console.log(
+    //   `[AI Service] History pruned: ${pruned.originalCount} -> ${pruned.prunedCount} messages, ` +
+    //     `${pruned.originalTokens} -> ${pruned.prunedTokens} tokens`,
+    // );
+  }
+
+  const totalTokens =
+    queryTokens +
+    contextTokens +
+    estimateTokens(processedHistory.map((m) => m.content).join(""));
+  // console.log(
+  //   `[AI Service] Token usage: ~${totalTokens}/${availableTokens} available`,
+  // );
+  // console.log("-".repeat(70));
 
   try {
     // Build messages array with history
@@ -223,17 +289,21 @@ export async function graphBasedChat({
     }> = [];
 
     // Add context as system message if provided
-    if (context) {
+    if (processedContext) {
       messages.push({
         role: "system",
-        content: `Context from the codebase:\n${context}`,
+        content: `Context from the codebase:\n${processedContext}`,
       });
     }
 
     // Add conversation history
-    if (history && history.length > 0) {
-      console.log("[AI Service] Adding", history.length, "history messages");
-      for (const msg of history) {
+    if (processedHistory.length > 0) {
+      // console.log(
+      //   "[AI Service] Adding",
+      //   processedHistory.length,
+      //   "history messages",
+      // );
+      for (const msg of processedHistory) {
         messages.push({
           role: msg.role,
           content: msg.content,
@@ -244,19 +314,19 @@ export async function graphBasedChat({
     // Add current query
     messages.push({ role: "user", content: query });
 
-    console.log("[AI Service] Total messages for graph:", messages.length);
-    console.log("[AI Service] Calling invokeGraph...");
+    // console.log("[AI Service] Total messages for graph:", messages.length);
+    // console.log("[AI Service] Calling invokeGraph...");
 
     const result = await invokeGraph(messages, mode as ChatMode);
 
-    console.log("[AI Service] graphBasedChat COMPLETE");
-    console.log("[AI Service] usedMode:", result.usedMode);
-    console.log("[AI Service] responseLength:", result.response?.length);
-    console.log("-".repeat(70) + "\n");
+    // console.log("[AI Service] graphBasedChat COMPLETE");
+    // console.log("[AI Service] usedMode:", result.usedMode);
+    // console.log("[AI Service] responseLength:", result.response?.length);
+    // console.log("-".repeat(70) + "\n");
 
     return result;
   } catch (err) {
-    console.error("[AI Service] graphBasedChat ERROR:", err);
+    // console.error("[AI Service] graphBasedChat ERROR:", err);
     throw err;
   }
 }
@@ -277,12 +347,12 @@ export async function chat({
   systemPrompt = "You are a helpful AI coding assistant. You are precise and concise. Format your responses using markdown when appropriate.",
   context,
 }: ChatOptions): Promise<string> {
-  console.log("[AI] chat start", {
-    mode,
-    model,
-    queryLength: query.length,
-    hasContext: !!context,
-  });
+  // console.log("[AI] chat start", {
+  //   mode,
+  //   model,
+  //   queryLength: query.length,
+  //   hasContext: !!context,
+  // });
 
   if (!OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not set");
@@ -321,7 +391,7 @@ export async function chat({
     const content = response.choices[0]?.message?.content || "";
     return content;
   } catch (err) {
-    console.error("[AI] chat error:", err);
+    // console.error("[AI] chat error:", err);
     throw err;
   }
 }
@@ -336,16 +406,16 @@ export async function autoChat({
   query: string;
   context?: string;
 }): Promise<{ response: string; mode: string }> {
-  console.log("[AI] autoChat - routing via LangGraph supervisor...");
+  // console.log("[AI] autoChat - routing via LangGraph supervisor...");
 
   try {
     const result = await graphBasedChat({ query, mode: "auto", context });
     return { response: result.response, mode: result.usedMode };
   } catch (err) {
-    console.error(
-      "[AI] autoChat graph error, falling back to keyword routing:",
-      err,
-    );
+    // console.error(
+    //   "[AI] autoChat graph error, falling back to keyword routing:",
+    //   err,
+    // );
     // Fallback to simple keyword-based routing
     const queryLower = query.toLowerCase();
 
@@ -378,7 +448,7 @@ export async function autoChat({
       detectedMode = "reasoning";
     }
 
-    console.log("[AI] autoChat fallback - detected mode:", detectedMode);
+    // console.log("[AI] autoChat fallback - detected mode:", detectedMode);
 
     if (detectedMode === "web") {
       const response = await webChat({ query, context });
@@ -400,7 +470,7 @@ export async function webChat({
   query: string;
   context?: string;
 }): Promise<string> {
-  console.log("[AI] webChat - searching web...");
+  // console.log("[AI] webChat - searching web...");
 
   // Import tavily dynamically to avoid circular deps -- this is nice!
   const { tavilySearch } = await import("./tavily");
@@ -437,7 +507,7 @@ export async function webChat({
 
     return response;
   } catch (err) {
-    console.error("[AI] webChat error:", err);
+    // console.error("[AI] webChat error:", err);
     // Fallback to regular chat if web search fails
     return chat({
       query,
@@ -451,20 +521,26 @@ export async function webChat({
 
 /**
  * RAG-enhanced chat: retrieves relevant context from file or codebase
- * Routes through LangGraph for consistent response handling
+ * Routes through LangGraph for consistent response handling.
+ *
+ * Token management is handled downstream by graphBasedChat.
+ * We fetch more chunks than needed and let the token manager prune.
  */
 export async function ragChat({
   query,
   fileContent,
   filePath,
   contextMode = "file",
+  history,
 }: {
   query: string;
   fileContent?: string;
   filePath?: string;
   contextMode?: "file" | "codebase";
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
 }): Promise<string> {
-  console.log("[AI] ragChat - contextMode:", contextMode);
+  // console.log("[AI] ragChat - contextMode:", contextMode);
+  // console.log("[AI] ragChat - historyLength:", history?.length || 0);
 
   // Import RAG utilities
   const {
@@ -481,30 +557,35 @@ export async function ragChat({
 
     if (contextMode === "codebase") {
       // Search across entire codebase using HNSW
-      console.log("[AI] ragChat - searching codebase with HNSW...");
+      // console.log("[AI] ragChat - searching codebase with HNSW...");
       await initHNSW();
 
-      const results = await searchRelevantChunks(query, 5);
+      // Fetch up to 20 chunks - token manager will prune if needed
+      const results = await searchRelevantChunks(query, 20);
 
       if (results.length === 0) {
-        console.log("[AI] ragChat - no relevant chunks found in codebase");
+        // console.log("[AI] ragChat - no relevant chunks found in codebase");
         // Fall through to graph-based chat without context
       } else {
+        // Calculate approximate token usage for logging
+        const contextTokens = results.reduce(
+          (sum, r) => sum + estimateTokens(r.text),
+          0,
+        );
+        // console.log(
+        //   `[AI] ragChat - found ${results.length} chunks (~${contextTokens} tokens)`,
+        // );
+
         relevantContext = results
           .map(
             (r, i) =>
               `// From ${r.filePath} (relevance: ${(r.score * 100).toFixed(1)}%):\n${r.text}`,
           )
           .join("\n\n");
-        console.log(
-          "[AI] ragChat - found",
-          results.length,
-          "relevant chunks from codebase",
-        );
       }
     } else if (contextMode === "file" && fileContent) {
       // Index current file and search within it
-      console.log("[AI] ragChat - searching within current file...");
+      // console.log("[AI] ragChat - searching within current file...");
 
       // Index the file if provided
       if (filePath) {
@@ -534,24 +615,25 @@ export async function ragChat({
               `// Lines ${idx * 30 + 1}-${(idx + 1) * 30}:\n${chunks[idx]}`,
           )
           .join("\n\n");
-        console.log(
-          "[AI] ragChat - found relevant chunks at indices:",
-          topIndices,
-        );
+        // console.log(
+        //   "[AI] ragChat - found relevant chunks at indices:",
+        //   topIndices,
+        // );
       }
     }
 
     // Route through LangGraph with context
-    console.log("[AI] ragChat - routing through LangGraph...");
+    // console.log("[AI] ragChat - routing through LangGraph...");
     const result = await graphBasedChat({
       query,
       mode: "auto", // Let supervisor decide best handling
       context: relevantContext || undefined,
+      history,
     });
 
     return result.response;
   } catch (err) {
-    console.error("[AI] ragChat error:", err);
+    // console.error("[AI] ragChat error:", err);
     // Fallback: pass truncated file content or just query
     const fallbackContext = fileContent
       ? fileContent.slice(0, 4000)
@@ -572,7 +654,7 @@ export async function indexEntireCodebase(): Promise<{
   skipped: number;
   errors: string[];
 }> {
-  console.log("[AI] indexEntireCodebase - starting...");
+  // console.log("[AI] indexEntireCodebase - starting...");
 
   const { indexCodebase, initHNSW } = await import("./rag");
   const { getTree, getFileContent } = await import("./file");
@@ -587,10 +669,10 @@ export async function indexEntireCodebase(): Promise<{
     // Index all files
     const result = await indexCodebase(tree, getFileContent);
 
-    console.log("[AI] indexEntireCodebase - complete:", result);
+    // console.log("[AI] indexEntireCodebase - complete:", result);
     return result;
   } catch (err) {
-    console.error("[AI] indexEntireCodebase error:", err);
+    // console.error("[AI] indexEntireCodebase error:", err);
     throw err;
   }
 }

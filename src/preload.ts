@@ -18,6 +18,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   insertAtCursor: (path: string, insertion: string, marker?: string) =>
     ipcRenderer.invoke("file:insertAtCursor", path, insertion, marker),
   openDialog: () => ipcRenderer.invoke("file:openDialog"),
+  openFolderDialog: () => ipcRenderer.invoke("file:openFolderDialog"),
+  setRoot: (path: string) => ipcRenderer.invoke("file:setRoot", path),
+  getRoot: () => ipcRenderer.invoke("file:getRoot"),
+  
 
   // AI operations
   aiGhost: (args: any) => ipcRenderer.invoke("ai:ghost", args),

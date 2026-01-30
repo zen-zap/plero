@@ -11,7 +11,7 @@ function getRoot(): string {
         : process.cwd();
 }
 
-const ROOT = getRoot();
+let ROOT = getRoot();
 
 export type FileNode = {
     readonly name: string; 
@@ -27,6 +27,21 @@ export type FolderNode = {
 };
 
 export type TreeNode = FileNode | FolderNode;
+
+/**
+ * To change the current working directory (root directory change).
+ */
+export function setRoot(newRoot: string): void {
+    if(!fs.existsSync(newRoot) || !fs.statSync(newRoot).isDirectory()) {
+        throw new Error("Invalid root directory");
+    }
+    ROOT = path.resolve(newRoot);
+}
+
+// just in case I need to get the current root
+export function getCurrentRoot(): string {
+    return ROOT;
+}
 
 /**
  * Recursively gets the directory tree starting from the given directory.

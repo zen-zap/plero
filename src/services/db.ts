@@ -1,7 +1,12 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import pathModule from "path";
+import os from "os";
 import HierarchicalNSW from "hnswlib-node";
 import fs from "fs";
 import path from "path";
+
+// Load API keys from ~/.plero_keys/.env
+dotenv.config({ path: pathModule.join(os.homedir(), ".plero_keys", ".env") });
 
 // HNSW Configuration
 const EMBEDDING_DIM = 384; // all-MiniLM-L6-v2 produces 384-dimensional embeddings
@@ -10,12 +15,10 @@ const M = 16; // Number of bi-directional links created for each element
 const EF_CONSTRUCTION = 200; // Size of the dynamic list for nearest neighbors (construction)
 const EF_SEARCH = 100; // Size of the dynamic list for nearest neighbors (search)
 
-// Storage paths
 const CACHE_DIR = path.join(process.cwd(), ".plero");
 const HNSW_INDEX_PATH = path.join(CACHE_DIR, "hnsw_index.bin");
 const HNSW_METADATA_PATH = path.join(CACHE_DIR, "hnsw_metadata.json");
 
-// Ensure cache directory exists
 if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
 }
@@ -46,29 +49,29 @@ let metadata: HNSWMetadata = {
  * Initialize the HNSW index. Loads from disk if exists, otherwise creates new.
  */
 export async function initHNSW(): Promise<void> {
-  console.log("[HNSW] Initializing HNSW index...");
+  // console.log("[HNSW] Initializing HNSW index...");
 
   index = new HierarchicalNSW.HierarchicalNSW("cosine", EMBEDDING_DIM);
 
   // Try to load existing index
   if (fs.existsSync(HNSW_INDEX_PATH) && fs.existsSync(HNSW_METADATA_PATH)) {
     try {
-      console.log("[HNSW] Loading existing index from disk...");
+      // console.log("[HNSW] Loading existing index from disk...");
       index.readIndexSync(HNSW_INDEX_PATH);
       const metadataContent = fs.readFileSync(HNSW_METADATA_PATH, "utf-8");
       metadata = JSON.parse(metadataContent);
-      console.log(
-        `[HNSW] Loaded index with ${metadata.chunks.length} chunks from ${Object.keys(metadata.fileHashes).length} files`,
-      );
+      // console.log(
+      //   `[HNSW] Loaded index with ${metadata.chunks.length} chunks from ${Object.keys(metadata.fileHashes).length} files`,
+      // );
     } catch (error) {
-      console.error(
-        "[HNSW] Failed to load existing index, creating new:",
-        error,
-      );
+      // console.error(
+      //   "[HNSW] Failed to load existing index, creating new:",
+      //   error,
+      // );
       createNewIndex();
     }
   } else {
-    console.log("[HNSW] No existing index found, creating new...");
+    // console.log("[HNSW] No existing index found, creating new...");
     createNewIndex();
   }
 }
@@ -81,7 +84,7 @@ function createNewIndex(): void {
     fileHashes: {},
     nextId: 0,
   };
-  console.log("[HNSW] Created new index");
+  // console.log("[HNSW] Created new index");
 }
 
 /**
@@ -89,7 +92,7 @@ function createNewIndex(): void {
  */
 export function saveHNSW(): void {
   if (!index) {
-    console.warn("[HNSW] Cannot save - index not initialized");
+    // console.warn("[HNSW] Cannot save - index not initialized");
     return;
   }
 
@@ -100,9 +103,9 @@ export function saveHNSW(): void {
       JSON.stringify(metadata, null, 2),
       "utf-8",
     );
-    console.log("[HNSW] Saved index and metadata to disk");
+    // console.log("[HNSW] Saved index and metadata to disk");
   } catch (error) {
-    console.error("[HNSW] Failed to save index:", error);
+    // console.error("[HNSW] Failed to save index:", error);
   }
 }
 
@@ -121,15 +124,15 @@ export async function addChunksToIndex(
   }
   if (!index) throw new Error("Failed to initialize HNSW index");
 
-  console.log(`[HNSW] Adding ${chunks.length} chunks from ${filePath}`);
+  // console.log(`[HNSW] Adding ${chunks.length} chunks from ${filePath}`);
 
   // Remove old chunks from this file if they exist
   const existingChunks = metadata.chunks.filter((c) => c.filePath === filePath);
   if (existingChunks.length > 0) {
     // Mark old positions for re-use (HNSW doesn't support true deletion, but we track metadata)
-    console.log(
-      `[HNSW] Replacing ${existingChunks.length} existing chunks from ${filePath}`,
-    );
+    // console.log(
+    //   `[HNSW] Replacing ${existingChunks.length} existing chunks from ${filePath}`,
+    // );
     metadata.chunks = metadata.chunks.filter((c) => c.filePath !== filePath);
   }
 
@@ -150,9 +153,9 @@ export async function addChunksToIndex(
   // Update file hashes
   metadata.fileHashes[filePath] = chunkHashes;
 
-  console.log(
-    `[HNSW] Index now contains ${metadata.chunks.length} total chunks`,
-  );
+  // console.log(
+  //   `[HNSW] Index now contains ${metadata.chunks.length} total chunks`,
+  // );
 }
 
 /**
@@ -164,7 +167,7 @@ export async function searchHNSW(
   filterFilePath?: string,
 ): Promise<Array<{ text: string; filePath: string; score: number }>> {
   if (!index || metadata.chunks.length === 0) {
-    console.log("[HNSW] Index empty or not initialized");
+    // console.log("[HNSW] Index empty or not initialized");
     return [];
   }
 
@@ -273,6 +276,6 @@ export function clearHNSW(): void {
   if (index) {
     createNewIndex();
     saveHNSW();
-    console.log("[HNSW] Index cleared");
+    // console.log("[HNSW] Index cleared");
   }
 }
