@@ -31,6 +31,8 @@ You'll need to set up your API keys:
 
 See `demo.env` at the project root for reference.
 
+This uses gpt-4o, gpt-5.1-codex-mini, gpt-5.1-mini for different purposes. Be mindful of costs if trying out.
+
 The services are paid and I can't afford to provide any as a student.
 
 ## Contributions:
