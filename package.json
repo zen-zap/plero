@@ -1,6 +1,6 @@
 {
     "name": "plero",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "main": "dist/main.js",
     "description": "AI-powered code editor with ghost completions and RAG-enhanced chat",
     "author": "zen-zap",
